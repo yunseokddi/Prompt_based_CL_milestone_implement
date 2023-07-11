@@ -50,14 +50,15 @@ def CIFAR100_get_args_parser(subparsers):
     subparsers.add_argument('--recount', type=int, default=1, help='Random erase count (default: 1)')
 
     # Data parameters
-    subparsers.add_argument('--data-path', default='/local_datasets/', type=str, help='dataset path')
+    subparsers.add_argument('--data-path', default='/home/dorosee/yunseok/data/CL_milestone_dataset', type=str, help='dataset path')
     subparsers.add_argument('--dataset', default='Split-CIFAR100', type=str, help='dataset name')
     subparsers.add_argument('--shuffle', default=False, help='shuffle the data order')
     subparsers.add_argument('--output_dir', default='./output', help='path where to save, empty for no saving')
     subparsers.add_argument('--device', default='cuda', help='device to use for training / testing')
     subparsers.add_argument('--seed', default=42, type=int)
     subparsers.add_argument('--eval', action='store_true', help='Perform evaluation only')
-    subparsers.add_argument('--num_workers', default=4, type=int)
+    subparsers.add_argument('--num_workers', default=16, type=int)
+    subparsers.add_argument('--gpu', default="2,3", type=str)
     subparsers.add_argument('--pin-mem', action='store_true',
                         help='Pin CPU memory in DataLoader for more efficient (sometimes) transfer to GPU.')
     subparsers.add_argument('--no-pin-mem', action='store_false', dest='pin_mem',

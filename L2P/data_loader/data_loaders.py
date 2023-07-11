@@ -3,7 +3,7 @@ import random
 from torchvision import datasets, transforms
 from torch.utils.data.dataset import Subset
 from .datasets import *
-from ..utils.utils import *
+from utils.utils import get_world_size, get_rank
 
 class Lambda(transforms.Lambda):
     def __init__(self, lambd, nb_classes):
@@ -18,10 +18,11 @@ class ContinualDataLoader(object):
     def __init__(self, args):
         self.args = args
         self.dataloader = []
-        self.class_mask = [] if self.args.task_inc or self.train_mask else None
+        self.class_mask = [] if self.args.task_inc or self.args.train_mask else None
 
-        self.trasform_train = self.build_transform(True)
-        self.trasform_val = self.build_transform(False)
+        self.transform_train = self.build_transform(True)
+        self.transform_val = self.build_transform(False)
+
 
         if self.args.dataset.startswith('Split-'):
             self.dataset_train, self.dataset_val = self.get_dataset(self.args.dataset.replace('Split-', ''))
@@ -33,7 +34,7 @@ class ContinualDataLoader(object):
             if self.args.dataset == '5-datasets':
                 dataset_list = ['SVHN', 'MNIST', 'CIFAR10', 'NotMNIST', 'FashionMNIST']
             else:
-                dataset_list = args.dataset.split(',')
+                dataset_list = self.args.dataset.split(',')
 
             if self.args.shuffle:
                 random.shuffle(dataset_list)
@@ -42,7 +43,7 @@ class ContinualDataLoader(object):
             self.args.nb_classes = 0
 
         for i in range(self.args.num_tasks):
-            if self.args.dataset.startwith('Split-'):
+            if self.args.dataset.startswith('Split-'):
                 self.dataset_train, self.dataset_val = splited_dataset[i]
 
             else:
@@ -50,116 +51,116 @@ class ContinualDataLoader(object):
 
                 transform_target = Lambda(self.target_transform, self.args.nb_classes)
 
-                if class_mask is not None:
-                    class_mask.append([i+self.args.nb_classes for i in range(len(self.dataset_val.classes))])
+                if self.class_mask is not None:
+                    self.class_mask.append([i+self.args.nb_classes for i in range(len(self.dataset_val.classes))])
                     self.args.nb_classes += len(self.dataset_val.classes)
 
                 if not self.args.task_inc:
                     self.dataset_train.target_transform = transform_target
                     self.dataset_val.target_transform = transform_target
 
-            if self.args.distributed and utils.get_world_size() > 1:
-                num_tasks = utils.get_world_size()
-                global_rank = utils.get_rank()
+            if self.args.distributed and get_world_size() > 1:
+                num_tasks = get_world_size()
+                global_rank = get_rank()
 
                 sampler_train = torch.utils.data.DistributedSampler(
-                    dataset_train, num_replicas=num_tasks, rank=global_rank, shuffle=True)
+                    self.dataset_train, num_replicas=num_tasks, rank=global_rank, shuffle=True)
 
-                sampler_val = torch.utils.data.SequentialSampler(dataset_val)
+                sampler_val = torch.utils.data.SequentialSampler(self.dataset_val)
             else:
-                sampler_train = torch.utils.data.RandomSampler(dataset_train)
-                sampler_val = torch.utils.data.SequentialSampler(dataset_val)
+                sampler_train = torch.utils.data.RandomSampler(self.dataset_train)
+                sampler_val = torch.utils.data.SequentialSampler(self.dataset_val)
 
-            data_loader_train = torch.utils.data.DataLoader(
-                dataset_train, sampler=sampler_train,
+            self.data_loader_train = torch.utils.data.DataLoader(
+                self.dataset_train, sampler=sampler_train,
                 batch_size=args.batch_size,
                 num_workers=args.num_workers,
                 pin_memory=args.pin_mem,
             )
 
-            data_loader_val = torch.utils.data.DataLoader(
-                dataset_val, sampler=sampler_val,
+            self.data_loader_val = torch.utils.data.DataLoader(
+                self.dataset_val, sampler=sampler_val,
                 batch_size=args.batch_size,
                 num_workers=args.num_workers,
                 pin_memory=args.pin_mem,
             )
 
-            dataloader.append({'train': data_loader_train, 'val': data_loader_val})
+            self.dataloader.append({'train': self.data_loader_train, 'val': self.data_loader_val})
 
-        return dataloader, class_mask
-
+    def get_dataloader(self):
+        return self.dataloader, self.class_mask
 
     def get_dataset(self, dataset):
         if dataset == 'CIFAR100':
             dataset_train = datasets.CIFAR100(self.args.data_path, train=True, download=True,
-                                              transform=self.args.transform_train)
-            dataset_val = datasets.CIFAR100(self.args.args.data_path, train=False, download=True,
-                                            transform=self.args.transform_val)
+                                              transform=self.transform_train)
+            dataset_val = datasets.CIFAR100(self.args.data_path, train=False, download=True,
+                                            transform=self.transform_val)
 
         elif dataset == 'CIFAR10':
-            dataset_train = datasets.CIFAR10(self.args.args.data_path, train=True, download=True,
-                                             transform=self.args.transform_train)
-            dataset_val = datasets.CIFAR10(self.args.args.data_path, train=False, download=True,
-                                           transform=self.args.transform_val)
+            dataset_train = datasets.CIFAR10(self.args.data_path, train=True, download=True,
+                                             transform=self.transform_train)
+            dataset_val = datasets.CIFAR10(self.args.data_path, train=False, download=True,
+                                           transform=self.transform_val)
 
         elif dataset == 'MNIST':
-            dataset_train = MNIST_RGB(self.args.args.data_path, train=True, download=True,
-                                      transform=self.args.transform_train)
-            dataset_val = MNIST_RGB(self.args.args.data_path, train=False, download=True,
-                                    transform=self.args.transform_val)
+            dataset_train = MNIST_RGB(self.args.data_path, train=True, download=True,
+                                      transform=self.transform_train)
+            dataset_val = MNIST_RGB(self.args.data_path, train=False, download=True,
+                                    transform=self.transform_val)
 
         elif dataset == 'FashionMNIST':
-            dataset_train = FashionMNIST(self.args.args.data_path, train=True, download=True,
-                                         transform=self.args.transform_train)
-            dataset_val = FashionMNIST(self.args.args.data_path, train=False, download=True,
-                                       transform=self.args.transform_val)
+            dataset_train = FashionMNIST(self.args.data_path, train=True, download=True,
+                                         transform=self.transform_train)
+            dataset_val = FashionMNIST(self.args.data_path, train=False, download=True,
+                                       transform=self.transform_val)
 
         elif dataset == 'SVHN':
-            dataset_train = SVHN(self.args.args.data_path, split='train', download=True,
-                                 transform=self.args.transform_train)
-            dataset_val = SVHN(self.args.args.data_path, split='test', download=True, transform=self.args.transform_val)
+            dataset_train = SVHN(self.args.data_path, split='train', download=True,
+                                 transform=self.transform_train)
+            dataset_val = SVHN(self.args.data_path, split='test', download=True, transform=self.transform_val)
 
         elif dataset == 'NotMNIST':
-            dataset_train = NotMNIST(self.args.args.data_path, train=True, download=True,
-                                     transform=self.args.transform_train)
-            dataset_val = NotMNIST(self.args.args.data_path, train=False, download=True,
-                                   transform=self.args.transform_val)
+            dataset_train = NotMNIST(self.args.data_path, train=True, download=True,
+                                     transform=self.transform_train)
+            dataset_val = NotMNIST(self.args.data_path, train=False, download=True,
+                                   transform=self.transform_val)
 
         elif dataset == 'Flower102':
-            dataset_train = Flowers102(self.args.args.data_path, split='train', download=True,
-                                       transform=self.args.transform_train)
-            dataset_val = Flowers102(self.args.args.data_path, split='test', download=True,
-                                     transform=self.args.transform_val)
+            dataset_train = Flowers102(self.args.data_path, split='train', download=True,
+                                       transform=self.transform_train)
+            dataset_val = Flowers102(self.args.data_path, split='test', download=True,
+                                     transform=self.transform_val)
 
         elif dataset == 'Cars196':
-            dataset_train = StanfordCars(self.args.args.data_path, split='train', download=True,
-                                         transform=self.args.transform_train)
-            dataset_val = StanfordCars(self.args.args.data_path, split='test', download=True,
-                                       transform=self.args.transform_val)
+            dataset_train = StanfordCars(self.args.data_path, split='train', download=True,
+                                         transform=self.transform_train)
+            dataset_val = StanfordCars(self.args.data_path, split='test', download=True,
+                                       transform=self.transform_val)
 
         elif dataset == 'CUB200':
-            dataset_train = CUB200(self.args.args.data_path, train=True, download=True,
-                                   transform=self.args.transform_train).data
-            dataset_val = CUB200(self.args.args.data_path, train=False, download=True,
-                                 transform=self.args.transform_val).data
+            dataset_train = CUB200(self.args.data_path, train=True, download=True,
+                                   transform=self.transform_train).data
+            dataset_val = CUB200(self.args.data_path, train=False, download=True,
+                                 transform=self.transform_val).data
 
         elif dataset == 'Scene67':
-            dataset_train = Scene67(self.args.args.data_path, train=True, download=True,
-                                    transform=self.args.transform_train).data
-            dataset_val = Scene67(self.args.args.data_path, train=False, download=True,
-                                  transform=self.args.transform_val).data
+            dataset_train = Scene67(self.args.data_path, train=True, download=True,
+                                    transform=self.transform_train).data
+            dataset_val = Scene67(self.args.data_path, train=False, download=True,
+                                  transform=self.transform_val).data
 
         elif dataset == 'TinyImagenet':
-            dataset_train = TinyImagenet(self.args.args.data_path, train=True, download=True,
-                                         transform=self.args.transform_train).data
-            dataset_val = TinyImagenet(self.args.args.data_path, train=False, download=True,
-                                       transform=self.args.transform_val).data
+            dataset_train = TinyImagenet(self.args.data_path, train=True, download=True,
+                                         transform=self.transform_train).data
+            dataset_val = TinyImagenet(self.args.data_path, train=False, download=True,
+                                       transform=self.transform_val).data
 
         elif dataset == 'Imagenet-R':
-            dataset_train = Imagenet_R(self.args.args.data_path, train=True, download=True,
-                                       transform=self.args.transform_train).data
-            dataset_val = Imagenet_R(self.args.args.data_path, train=False, download=True,
-                                     transform=self.args.transform_val).data
+            dataset_train = Imagenet_R(self.args.data_path, train=True, download=True,
+                                       transform=self.transform_train).data
+            dataset_val = Imagenet_R(self.args.data_path, train=False, download=True,
+                                     transform=self.transform_val).data
 
         else:
             raise ValueError('Dataset {} not found.'.format(dataset))
@@ -177,7 +178,7 @@ class ContinualDataLoader(object):
         mask = list()
 
         if self.args.shuffle:
-            self.random.shuffle(labels)
+            random.shuffle(labels)
 
         for _ in range(self.args.num_tasks):
             train_split_indices = []
