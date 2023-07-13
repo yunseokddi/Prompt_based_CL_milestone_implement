@@ -18,15 +18,15 @@ from data_loader.data_loaders import ContinualDataLoader
 from timm.models import create_model
 from timm.scheduler import create_scheduler
 from timm.optim import create_optimizer
+from trainer.trainer import Trainer
+
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"]= "2, 3"
 
 warnings.filterwarnings('ignore')
 
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = True
-
-os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]= "2, 3"
-
 
 def main(args):
     init_distributed_mode(args)
@@ -94,7 +94,7 @@ def main(args):
     # -----------------------------------------
 
     model_without_ddp = model
-
+    print(args.distributed)
     if args.distributed:
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu])
         model_without_ddp = model.module
@@ -102,6 +102,34 @@ def main(args):
     n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
 
     print("number of params: {}".format(n_parameters))
+
+    if args.unscale_lr:
+        global_batch_size = args.batch_size
+    else:
+        global_batch_size = args.batch_size * args.world_size
+
+    args.lr = args.lr * global_batch_size / 256.0
+
+    optimizer = create_optimizer(args, model_without_ddp)
+
+    if args.sched != 'constant':
+        lr_scheduler, _ = create_scheduler(args, optimizer)
+    elif args.sched == 'constant':
+        lr_scheduler = None
+
+    criterion = torch.nn.CrossEntropyLoss().to(device)
+
+    trainer = Trainer(model, model_without_ddp, original_model, criterion, data_loader, optimizer, lr_scheduler, device
+                      , class_mask, args)
+
+    print("Start training for {} epochs".format(args.epochs))
+    start_time = time.time()
+
+    trainer.train()
+
+    total_time = time.time() - start_time
+    total_time_str = str(datetime.timedelta(seconds=int(total_time)))
+    print(f"Total training time: {total_time_str}")
 
 
 if __name__ == "__main__":
@@ -125,3 +153,11 @@ if __name__ == "__main__":
     main(args)
 
     sys.exit(0)
+'''
+CUDA_VISIBLE_DEVICES=2,3 python -m torch.distributed.launch \
+        --nproc_per_node=2 \
+        --use_env train.py \
+        cifar100_l2p \
+        --model vit_base_patch16_224 \
+        --batch-size 16
+'''

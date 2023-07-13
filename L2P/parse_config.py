@@ -58,7 +58,7 @@ def CIFAR100_get_args_parser(subparsers):
     subparsers.add_argument('--seed', default=42, type=int)
     subparsers.add_argument('--eval', action='store_true', help='Perform evaluation only')
     subparsers.add_argument('--num_workers', default=16, type=int)
-    subparsers.add_argument('--gpu', default="2,3", type=str)
+    subparsers.add_argument('--gpu', default=[2,3], type=list)
     subparsers.add_argument('--pin-mem', action='store_true',
                         help='Pin CPU memory in DataLoader for more efficient (sometimes) transfer to GPU.')
     subparsers.add_argument('--no-pin-mem', action='store_false', dest='pin_mem',
