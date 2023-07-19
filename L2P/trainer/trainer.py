@@ -2,9 +2,13 @@ import numpy as np
 import torch
 import math
 import os
+import sys
 
 from timm.optim import create_optimizer
 from utils.utils import get_world_size, MetricLogger, SmoothedValue
+from tqdm import tqdm
+from timm.utils import accuracy
+
 
 class Trainer(object):
     def __init__(self, model, model_without_ddp, original_model,
@@ -78,9 +82,75 @@ class Trainer(object):
                 self.optimizer = create_optimizer(self.args, self.model)
 
             for epoch in range(self.args.epochs):
-                self._train_epoch(data_loader=self.data_loader[task_id]['train'], epoch=epoch)
+                self._train_epoch(data_loader=self.data_loader[task_id]['train'], epoch=epoch, task_id=task_id)
 
-    def _train_epoch(self, data_loader, epoch):
+                if self.lr_scheduler:
+                    self.lr_scheduler.step(epoch)
+
+            self.evaluate_till_now(task_id)
+
+    @torch.no_grad()
+    def _valid_epoch(self, data_loader, task_id):
+        avg_loss = AverageMeter()
+        avg_acc1 = AverageMeter()
+        avg_acc5 = AverageMeter()
+
+        tq_val = tqdm(data_loader, total=len(data_loader))
+        criterion = torch.nn.CrossEntropyLoss()
+
+        self.model.eval()
+        self.original_model.eval()
+
+        with torch.no_grad():
+            for input, target in tq_val:
+                input = input.to(self.device, non_blocking=True)
+                target = target.to(self.device, non_blocking=True)
+
+                if self.original_model is not None:
+                    output = self.original_model(input)
+                    cls_feautures = output['pre_logits']
+
+                else:
+                    cls_feautures = None
+
+                output = self.model(input, task_id=task_id, cls_feautures=cls_feautures)
+                logits = output['logits']
+
+                loss = criterion(logits, target)
+
+                avg_loss.update(loss.data, input.size(0))
+
+                acc1, acc5 = accuracy(logits, target, topk=(1, 5))
+
+                avg_acc1.update(acc1, input.size(0))
+                avg_acc5.update(acc5, input.size(0))
+
+            errors = {
+                'Task ID': task_id,
+                'Val loss': avg_loss.avg.item(),
+                'ACC@1': avg_acc1.avg.item(),
+                'ACC@5': avg_acc5.avg.item()
+            }
+
+            tq_val.set_postfix(errors)
+
+        print("Task ID : {}, Val loss : {:.3f}, ACC@1 : {:.3f}, ACC@5 : {:.3f}".format(task_id, avg_loss.avg.item(),
+                                                                                       avg_acc1.avg.item(),
+                                                                                       avg_acc5.avg.item()))
+
+        return True
+
+    @torch.no_grad()
+    def evaluate_till_now(self, task_id):
+        for i in range(task_id + 1):
+            self._valid_epoch(self.data_loader[i]['val'], i)
+
+    def _train_epoch(self, data_loader, epoch, task_id):
+        avg_loss = AverageMeter()
+        avg_acc1 = AverageMeter()
+        avg_acc5 = AverageMeter()
+
+        tq_train = tqdm(data_loader, total=len(data_loader))
         self.model.train(True)
         self.original_model.eval()
 
@@ -104,7 +174,7 @@ class Trainer(object):
         #         else:
         #             cls_features = None
 
-        for input, target in data_loader:
+        for input, target in tq_train:
             input = input.to(self.device, non_blocking=True)
             target = target.to(self.device, non_blocking=True)
 
@@ -115,3 +185,71 @@ class Trainer(object):
 
                 else:
                     cls_features = None
+
+            output = self.model(input, task_id=task_id, cls_features=cls_features, train=True)
+            logits = output['logits']
+
+            # if self.args.train_mask and self.class_mask is not None:
+            #     mask = self.class_mask[task_id]
+            #     not_mask = np.setdiff1d(np.arange(self.args.nb_classes), mask)
+            #     not_mask = torch.tensor(not_mask, dtype=torch.int64).to(self.device)
+            #     logits = logits.index_fill(dim=1, index=not_mask, value=float('-inf'))
+
+            loss = self.criterion(logits, target)
+
+            avg_loss.update(loss.data, input.size(0))
+
+            if self.args.pull_constraint and 'reduce_sim' in output:
+                loss = loss - self.args.pull_constraint_coeff * output['reduce_sim']
+
+            acc1, acc5 = accuracy(logits, target, topk=(1, 5))
+
+            avg_acc1.update(acc1, input.size(0))
+            avg_acc5.update(acc5, input.size(0))
+
+            if not math.isfinite(loss.item()):
+                print("Loss is {}, stopping training".format(loss.item()))
+                sys.exit(1)
+
+            self.optimizer.zero_grad()
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=self.args.clip_grad)
+            self.optimizer.step()
+
+            torch.cuda.synchronize()
+
+            errors = {
+                'Task ID': task_id,
+                'Epoch': epoch,
+                'Train loss': avg_loss.avg.item(),
+                'ACC@1': avg_acc1.avg.item(),
+                'ACC@5': avg_acc5.avg.item()
+            }
+
+            tq_train.set_postfix(errors)
+
+        print("Task ID : {}, Epoch : {}, Train loss : {:.3f}, ACC@1 : {:.3f}, ACC@5 : {:.3f}".format(task_id, epoch,
+                                                                                                     avg_loss.avg.item(),
+                                                                                                     avg_acc1.avg.item(),
+                                                                                                     avg_acc5.avg.item()))
+
+        return True
+
+
+class AverageMeter(object):
+    """Computes and stores the average and current value"""
+
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.val = 0
+        self.avg = 0
+        self.sum = 0
+        self.count = 0
+
+    def update(self, val, n=1):
+        self.val = val
+        self.sum += val * n
+        self.count += n
+        self.avg = self.sum / self.count

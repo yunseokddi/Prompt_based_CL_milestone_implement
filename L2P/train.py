@@ -20,13 +20,14 @@ from timm.scheduler import create_scheduler
 from timm.optim import create_optimizer
 from trainer.trainer import Trainer
 
-os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]= "2, 3"
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = "2, 3"
 
 warnings.filterwarnings('ignore')
 
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = True
+
 
 def main(args):
     init_distributed_mode(args)
@@ -159,5 +160,5 @@ CUDA_VISIBLE_DEVICES=2,3 python -m torch.distributed.launch \
         --use_env train.py \
         cifar100_l2p \
         --model vit_base_patch16_224 \
-        --batch-size 16
+        --batch-size 128
 '''
