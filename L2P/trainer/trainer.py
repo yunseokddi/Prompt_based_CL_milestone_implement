@@ -5,10 +5,10 @@ import os
 import sys
 
 from timm.optim import create_optimizer
-from utils.utils import get_world_size, MetricLogger, SmoothedValue
+from utils.utils import get_world_size, MetricLogger, SmoothedValue, is_main_process, save_on_master
 from tqdm import tqdm
 from timm.utils import accuracy
-
+from pathlib import Path
 
 class Trainer(object):
     def __init__(self, model, model_without_ddp, original_model,
@@ -89,6 +89,24 @@ class Trainer(object):
 
             self.evaluate_till_now(task_id)
 
+            if self.args.output_dir and is_main_process():
+                Path(os.path.join(self.args.output_dir, 'checkpoint')).mkdir(parents=True, exist_ok=True)
+                checkpoint_path = os.path.join(self.args.output_dir, 'checkpoint/task{}_checkpoint.pth'.format(task_id+1))
+                state_dict = {
+                    'model': self.model_without_ddp.state_dict(),
+                    'optimizer': self.optimizer.state_dict(),
+                    'epoch': epoch,
+                    'args': self.args,
+                }
+
+                if self.args.sched is not None and self.args.sched != 'constant':
+                    state_dict['lr_scheduler'] = self.lr_scheduler.state_dict()
+
+                save_on_master(state_dict, checkpoint_path)
+
+
+
+
     @torch.no_grad()
     def _valid_epoch(self, data_loader, task_id):
         avg_loss = AverageMeter()
@@ -108,12 +126,12 @@ class Trainer(object):
 
                 if self.original_model is not None:
                     output = self.original_model(input)
-                    cls_feautures = output['pre_logits']
+                    cls_features = output['pre_logits']
 
                 else:
-                    cls_feautures = None
+                    cls_features = None
 
-                output = self.model(input, task_id=task_id, cls_feautures=cls_feautures)
+                output = self.model(input, task_id=task_id, cls_features=cls_features)
                 logits = output['logits']
 
                 loss = criterion(logits, target)

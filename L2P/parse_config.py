@@ -56,7 +56,7 @@ def CIFAR100_get_args_parser(subparsers):
     subparsers.add_argument('--output_dir', default='./output', help='path where to save, empty for no saving')
     subparsers.add_argument('--device', default='cuda', help='device to use for training / testing')
     subparsers.add_argument('--seed', default=42, type=int)
-    subparsers.add_argument('--eval', action='store_true', help='Perform evaluation only')
+    subparsers.add_argument('--eval',  default=False,action='store_true', help='Perform evaluation only')
     subparsers.add_argument('--num_workers', default=16, type=int)
     subparsers.add_argument('--gpu', default=[2,3], type=list)
     subparsers.add_argument('--pin-mem', action='store_true',

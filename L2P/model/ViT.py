@@ -36,9 +36,7 @@ import torch.nn.functional as F
 import torch.utils.checkpoint
 
 from timm.data import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD, IMAGENET_INCEPTION_MEAN, IMAGENET_INCEPTION_STD
-from timm.models.helpers import build_model_with_cfg, resolve_pretrained_cfg, named_apply, adapt_input_conv, \
-    checkpoint_seq
-
+from timm.models.helpers import build_model_with_cfg, resolve_pretrained_cfg, named_apply, adapt_input_conv, checkpoint_seq
 from timm.models.layers import PatchEmbed, Mlp, DropPath, trunc_normal_, lecun_normal_
 from timm.models.registry import register_model
 
@@ -102,7 +100,7 @@ default_cfgs = {
             'B_8-i21k-300ep-lr_0.001-aug_medium1-wd_0.1-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.01-res_224.npz'),
     'vit_large_patch32_224': _cfg(
         url='',  # no official model weights for this combo, only for in21k
-    ),
+        ),
     'vit_large_patch32_384': _cfg(
         url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-vitjx/jx_vit_large_p32_384-9b920ba8.pth',
         input_size=(3, 384, 384), crop_pct=1.0),
@@ -118,6 +116,7 @@ default_cfgs = {
     'vit_huge_patch14_224': _cfg(url=''),
     'vit_giant_patch14_224': _cfg(url=''),
     'vit_gigantic_patch14_224': _cfg(url=''),
+
 
     # patch models, imagenet21k (weights from official Google JAX impl)
     'vit_tiny_patch16_224_in21k': _cfg(
@@ -169,6 +168,7 @@ default_cfgs = {
         url='https://dl.fbaipublicfiles.com/dino/dino_vitbase8_pretrain/dino_vitbase8_pretrain.pth',
         mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD, num_classes=0),
 
+
     # ViT ImageNet-21K-P pretraining by MILL
     'vit_base_patch16_224_miil_in21k': _cfg(
         url='https://miil-public-eu.oss-eu-central-1.aliyuncs.com/model-zoo/ImageNet_21K_P/models/timm/vit_base_patch16_224_in21k_miil.pth',
@@ -208,7 +208,7 @@ class Attention(nn.Module):
     def forward(self, x):
         B, N, C = x.shape
         qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
-        q, k, v = qkv.unbind(0)  # make torchscript happy (cannot use tensor as tuple)
+        q, k, v = qkv.unbind(0)   # make torchscript happy (cannot use tensor as tuple)
 
         attn = (q @ k.transpose(-2, -1)) * self.scale
         attn = attn.softmax(dim=-1)
@@ -323,7 +323,6 @@ class ParallelBlock(nn.Module):
         else:
             return self._forward(x)
 
-
 class VisionTransformer(nn.Module):
     """ Vision Transformer
     A PyTorch impl of : `An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale`
@@ -335,9 +334,8 @@ class VisionTransformer(nn.Module):
             embed_dim=768, depth=12, num_heads=12, mlp_ratio=4., qkv_bias=True, init_values=None,
             class_token=True, no_embed_class=False, fc_norm=None, drop_rate=0., attn_drop_rate=0., drop_path_rate=0.,
             weight_init='', embed_layer=PatchEmbed, norm_layer=None, act_layer=None, block_fn=Block,
-            prompt_length=None, embedding_key='cls', prompt_init='uniform', prompt_pool=False, prompt_key=False,
-            pool_size=None,
-            top_k=None, batchwise_prompt=False, prompt_key_init='uniform', head_type='token', use_prompt_mask=False, ):
+            prompt_length=None, embedding_key='cls', prompt_init='uniform', prompt_pool=False, prompt_key=False, pool_size=None,
+            top_k=None, batchwise_prompt=False, prompt_key_init='uniform', head_type='token', use_prompt_mask=False,):
         """
         Args:
             img_size (int, tuple): input image size
@@ -395,11 +393,9 @@ class VisionTransformer(nn.Module):
         self.use_prompt_mask = use_prompt_mask
 
         if prompt_length is not None and pool_size is not None and prompt_pool:
-            self.prompt = Prompt(length=prompt_length, embed_dim=embed_dim, embedding_key=embedding_key,
-                                 prompt_init=prompt_init,
-                                 prompt_pool=prompt_pool, prompt_key=prompt_key, pool_size=pool_size, top_k=top_k,
-                                 batchwise_prompt=batchwise_prompt,
-                                 prompt_key_init=prompt_key_init, )
+            self.prompt = Prompt(length=prompt_length, embed_dim=embed_dim, embedding_key=embedding_key, prompt_init=prompt_init,
+                    prompt_pool=prompt_pool, prompt_key=prompt_key, pool_size=pool_size, top_k=top_k, batchwise_prompt=batchwise_prompt,
+                    prompt_key_init=prompt_key_init,)
 
         dpr = [x.item() for x in torch.linspace(0, drop_path_rate, depth)]  # stochastic depth decay rule
         self.blocks = nn.Sequential(*[
@@ -475,7 +471,7 @@ class VisionTransformer(nn.Module):
             self.total_prompt_len = res['total_prompt_len']
             x = res['prompted_embedding']
         else:
-            res = dict()
+            res=dict()
         if self.cls_token is not None:
             x = torch.cat((self.cls_token.expand(x.shape[0], -1, -1), x), dim=1)
 
@@ -896,7 +892,7 @@ def vit_huge_patch14_224(pretrained=False, **kwargs):
 def vit_giant_patch14_224(pretrained=False, **kwargs):
     """ ViT-Giant model (ViT-g/14) from `Scaling Vision Transformers` - https://arxiv.org/abs/2106.04560
     """
-    model_kwargs = dict(patch_size=14, embed_dim=1408, mlp_ratio=48 / 11, depth=40, num_heads=16, **kwargs)
+    model_kwargs = dict(patch_size=14, embed_dim=1408, mlp_ratio=48/11, depth=40, num_heads=16, **kwargs)
     model = _create_vision_transformer('vit_giant_patch14_224', pretrained=pretrained, **model_kwargs)
     return model
 
@@ -905,7 +901,7 @@ def vit_giant_patch14_224(pretrained=False, **kwargs):
 def vit_gigantic_patch14_224(pretrained=False, **kwargs):
     """ ViT-Gigantic model (ViT-G/14) from `Scaling Vision Transformers` - https://arxiv.org/abs/2106.04560
     """
-    model_kwargs = dict(patch_size=14, embed_dim=1664, mlp_ratio=64 / 13, depth=48, num_heads=16, **kwargs)
+    model_kwargs = dict(patch_size=14, embed_dim=1664, mlp_ratio=64/13, depth=48, num_heads=16, **kwargs)
     model = _create_vision_transformer('vit_gigantic_patch14_224', pretrained=pretrained, **model_kwargs)
     return model
 

@@ -90,10 +90,6 @@ def main(args):
 
     print(args)
 
-    # ---------- add evaluation src -----------
-
-    # -----------------------------------------
-
     model_without_ddp = model
     print(args.distributed)
     if args.distributed:
@@ -122,6 +118,24 @@ def main(args):
 
     trainer = Trainer(model, model_without_ddp, original_model, criterion, data_loader, optimizer, lr_scheduler, device
                       , class_mask, args)
+
+
+    if args.eval:
+        acc_matrix = np.zeros((args.num_tasks, args.num_tasks))
+
+        for task_id in range(args.num_tasks):
+            checkpoint_path = os.path.join(args.output_dir, 'checkpoint/task{}_checkpoint.pth'.format(task_id + 1))
+            if os.path.exists(checkpoint_path):
+                print('Loading checkpoint from:', checkpoint_path)
+                checkpoint = torch.load(checkpoint_path)
+                model.module.load_state_dict(checkpoint['model'])
+            else:
+                print('No checkpoint found at:', checkpoint_path)
+                return
+
+            _ = trainer.evaluate_till_now(task_id)
+
+        return
 
     print("Start training for {} epochs".format(args.epochs))
     start_time = time.time()
@@ -155,10 +169,14 @@ if __name__ == "__main__":
 
     sys.exit(0)
 '''
-CUDA_VISIBLE_DEVICES=2,3 python -m torch.distributed.launch \
+CUDA_VISIBLE_DEVICES=2,3 nohup python -m torch.distributed.launch \
         --nproc_per_node=2 \
         --use_env train.py \
         cifar100_l2p \
         --model vit_base_patch16_224 \
-        --batch-size 128
+        --batch-size 128 \
+        > experiment_1.out \
+        &
+        
+CUDA_VISIBLE_DEVICES=2 python -m torch.distributed.launch --nproc_per_node=1 --use_env train.py cifar100_l2p --eval
 '''
