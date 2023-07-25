@@ -27,6 +27,7 @@ class Prompt(nn.Module):
                 self.prompt = nn.Parameter(torch.randn(prompt_pool_shape))
                 nn.init.uniform_(self.prompt, -1, 1)
 
+        # if using learnable prompt keys
         if prompt_key:
             key_shape = (self.pool_size, self.embed_dim)
             if prompt_key_init == "zero":
@@ -37,6 +38,8 @@ class Prompt(nn.Module):
                 nn.init.uniform_(self.prompt_key, -1, 1)
 
         else:
+            # else use mean of prompt as key
+            # only compatible with prompt, not prefix
             prompt_mean = torch.mean(self.prompt, dim=1)
             self.prompt_key = prompt_mean
 
@@ -78,7 +81,9 @@ class Prompt(nn.Module):
 
                 if self.batchwise_prompt:
                     prompt_id, id_counts = torch.unique(idx, return_counts=True, sorted=True)
-
+                    # In jnp.unique, when the 'size' is specified and there are fewer than the indicated number of elements,
+                    # the remaining elements will be filled with 'fill_value', the default is the minimum value along the specified dimension.
+                    # Unless dimension is specified, this will be flattend if it is not already 1D.
                     if prompt_id.shape[0] < self.pool_size:
                         prompt_id = torch.cat([prompt_id,
                                                torch.full((self.pool_size - prompt_id.shape[0],),
