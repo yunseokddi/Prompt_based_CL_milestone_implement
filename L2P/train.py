@@ -6,7 +6,6 @@ import numpy as np
 import time
 import torch
 import torch.backends.cudnn as cudnn
-import model.model
 import os
 
 import warnings
@@ -19,9 +18,6 @@ from timm.models import create_model
 from timm.scheduler import create_scheduler
 from timm.optim import create_optimizer
 from trainer.trainer import Trainer
-
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "2, 3"
 
 warnings.filterwarnings('ignore')
 
