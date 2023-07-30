@@ -7,6 +7,7 @@ import time
 import torch
 import torch.backends.cudnn as cudnn
 import os
+import model.model
 
 import warnings
 
@@ -109,6 +110,9 @@ def main(args):
         lr_scheduler, _ = create_scheduler(args, optimizer)
     elif args.sched == 'constant':
         lr_scheduler = None
+    else:
+        lr_scheduler = None
+        assert "Check your learning rate scheduler"
 
     criterion = torch.nn.CrossEntropyLoss().to(device)
 

@@ -5,6 +5,8 @@ import torch
 import torch.backends.cudnn
 import random
 import numpy as np
+import time
+import datetime
 import model.model
 
 from parse_config import CIFAR100_get_args_parser
@@ -14,6 +16,7 @@ from data_loader.data_loaders import ContinualDataLoader
 from timm.models import create_model
 from timm.scheduler import create_scheduler
 from timm.optim import create_optimizer
+from trainer.trainer import Trainer
 
 warnings.filterwarnings('ignore')
 
@@ -111,12 +114,24 @@ def main(args):
         lr_scheduler, _ = create_scheduler(args, optimizer)
 
     elif args.sched == 'constant':
-        lr_sheduler = None
+        lr_scheduler = None
+
+    else:
+        lr_scheduler = None
+        assert "Check your learning rate scheduler"
 
     criterion = torch.nn.CrossEntropyLoss().to(device)
 
-    
+    trainer = Trainer(model, model_without_ddp, original_model, criterion, data_loader, optimizer, lr_scheduler, device, class_mask, args)
 
+    print("Start training for {} epochs".format(args.epochs))
+    start_time = time.time()
+
+    trainer.train()
+
+    total_time = time.time() - start_time
+    total_time_str = str(datetime.timedelta(seconds=int(total_time)))
+    print(f"Total training time: {total_time_str}")
 
 
 
