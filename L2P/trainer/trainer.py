@@ -25,7 +25,7 @@ class Trainer(object):
         self.class_mask = class_mask
         self.args = args
 
-        self.acc_matrix = np.zeros((args.num_tasks, args.num_tasks))
+        self.acc_matrix = np.zeros((self.args.num_tasks, self.args.num_tasks))
 
     def train(self):
         for task_id in range(self.args.num_tasks):
