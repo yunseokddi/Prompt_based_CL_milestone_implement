@@ -5,7 +5,7 @@ import os
 import sys
 
 from timm.optim import create_optimizer
-from utils.utils import get_world_size, MetricLogger, SmoothedValue, is_main_process, save_on_master
+from utils.utils import get_world_size, MetricLogger, SmoothedValue, is_main_process, save_on_master, AverageMeter
 from tqdm import tqdm
 from timm.utils import accuracy
 from pathlib import Path
@@ -252,22 +252,3 @@ class Trainer(object):
                                                                                                      avg_acc5.avg.item()))
 
         return True
-
-
-class AverageMeter(object):
-    """Computes and stores the average and current value"""
-
-    def __init__(self):
-        self.reset()
-
-    def reset(self):
-        self.val = 0
-        self.avg = 0
-        self.sum = 0
-        self.count = 0
-
-    def update(self, val, n=1):
-        self.val = val
-        self.sum += val * n
-        self.count += n
-        self.avg = self.sum / self.count
