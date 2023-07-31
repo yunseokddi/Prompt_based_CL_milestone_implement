@@ -90,7 +90,7 @@ def main(args):
             if n.startswith(tuple(args.freeze)):
                 p.requires_grad = False
 
-    print(args)
+    # print(args)
 
     model_without_ddp = model
 

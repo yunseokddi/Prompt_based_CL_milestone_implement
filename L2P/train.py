@@ -178,5 +178,12 @@ CUDA_VISIBLE_DEVICES=2,3 nohup python -m torch.distributed.launch \
         > experiment_1.out \
         &
         
+CUDA_VISIBLE_DEVICES=2,3 python -m torch.distributed.launch \
+        --nproc_per_node=2 \
+        --use_env train.py \
+        cifar100_l2p \
+        --model vit_base_patch16_224 \
+        --batch-size 128
+        
 CUDA_VISIBLE_DEVICES=2 python -m torch.distributed.launch --nproc_per_node=1 --use_env train.py cifar100_l2p --eval
 '''
