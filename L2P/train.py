@@ -175,7 +175,7 @@ CUDA_VISIBLE_DEVICES=2,3 nohup python -m torch.distributed.launch \
         cifar100_l2p \
         --model vit_base_patch16_224 \
         --batch-size 128 \
-        > experiment_1.out \
+        > experiment_2.out \
         &
         
 CUDA_VISIBLE_DEVICES=2,3 python -m torch.distributed.launch \

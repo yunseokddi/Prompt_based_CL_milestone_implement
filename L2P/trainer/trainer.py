@@ -207,11 +207,11 @@ class Trainer(object):
             output = self.model(input, task_id=task_id, cls_features=cls_features, train=True)
             logits = output['logits']
 
-            # if self.args.train_mask and self.class_mask is not None:
-            #     mask = self.class_mask[task_id]
-            #     not_mask = np.setdiff1d(np.arange(self.args.nb_classes), mask)
-            #     not_mask = torch.tensor(not_mask, dtype=torch.int64).to(self.device)
-            #     logits = logits.index_fill(dim=1, index=not_mask, value=float('-inf'))
+            if self.args.train_mask and self.class_mask is not None:
+                mask = self.class_mask[task_id]
+                not_mask = np.setdiff1d(np.arange(self.args.nb_classes), mask)
+                not_mask = torch.tensor(not_mask, dtype=torch.int64).to(self.device)
+                logits = logits.index_fill(dim=1, index=not_mask, value=float('-inf'))
 
             loss = self.criterion(logits, target)
 
