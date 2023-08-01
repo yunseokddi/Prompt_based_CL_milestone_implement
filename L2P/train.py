@@ -133,7 +133,7 @@ def main(args):
                 print('No checkpoint found at:', checkpoint_path)
                 return
 
-            _ = trainer.evaluate_till_now(task_id)
+            _ = trainer._valid_epoch(data_loader, task_id)
 
         return
 

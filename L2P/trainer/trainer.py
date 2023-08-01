@@ -10,6 +10,7 @@ from tqdm import tqdm
 from timm.utils import accuracy
 from pathlib import Path
 
+
 class Trainer(object):
     def __init__(self, model, model_without_ddp, original_model,
                  criterion, data_loader, optimizer, lr_scheduler, device,
@@ -87,11 +88,12 @@ class Trainer(object):
                 if self.lr_scheduler:
                     self.lr_scheduler.step(epoch)
 
-            self.evaluate_till_now(task_id)
+            self._valid_epoch(task_id)
 
             if self.args.output_dir and is_main_process():
                 Path(os.path.join(self.args.output_dir, 'checkpoint')).mkdir(parents=True, exist_ok=True)
-                checkpoint_path = os.path.join(self.args.output_dir, 'checkpoint/task{}_checkpoint.pth'.format(task_id+1))
+                checkpoint_path = os.path.join(self.args.output_dir,
+                                               'checkpoint/task{}_checkpoint.pth'.format(task_id + 1))
                 state_dict = {
                     'model': self.model_without_ddp.state_dict(),
                     'optimizer': self.optimizer.state_dict(),
@@ -104,64 +106,58 @@ class Trainer(object):
 
                 save_on_master(state_dict, checkpoint_path)
 
-
-
-
     @torch.no_grad()
     def _valid_epoch(self, data_loader, task_id):
-        avg_loss = AverageMeter()
-        avg_acc1 = AverageMeter()
-        avg_acc5 = AverageMeter()
+        for i in range(task_id + 1):
+            avg_loss = AverageMeter()
+            avg_acc1 = AverageMeter()
+            avg_acc5 = AverageMeter()
 
-        tq_val = tqdm(data_loader, total=len(data_loader))
-        criterion = torch.nn.CrossEntropyLoss()
+            tq_val = tqdm(data_loader[i]['val'], total=len(data_loader[i]['val']))
+            criterion = torch.nn.CrossEntropyLoss()
 
-        self.model.eval()
-        self.original_model.eval()
+            self.model.eval()
+            self.original_model.eval()
 
-        with torch.no_grad():
-            for input, target in tq_val:
-                input = input.to(self.device, non_blocking=True)
-                target = target.to(self.device, non_blocking=True)
+            with torch.no_grad():
+                for input, target in tq_val:
+                    input = input.to(self.device, non_blocking=True)
+                    target = target.to(self.device, non_blocking=True)
 
-                if self.original_model is not None:
-                    output = self.original_model(input)
-                    cls_features = output['pre_logits']
+                    if self.original_model is not None:
+                        output = self.original_model(input)
+                        cls_features = output['pre_logits']
 
-                else:
-                    cls_features = None
+                    else:
+                        cls_features = None
 
-                output = self.model(input, task_id=task_id, cls_features=cls_features)
-                logits = output['logits']
+                    output = self.model(input, task_id=task_id, cls_features=cls_features)
+                    logits = output['logits']
 
-                loss = criterion(logits, target)
+                    loss = criterion(logits, target)
 
-                avg_loss.update(loss.data, input.size(0))
+                    avg_loss.update(loss.data, input.size(0))
 
-                acc1, acc5 = accuracy(logits, target, topk=(1, 5))
+                    acc1, acc5 = accuracy(logits, target, topk=(1, 5))
 
-                avg_acc1.update(acc1, input.size(0))
-                avg_acc5.update(acc5, input.size(0))
+                    avg_acc1.update(acc1, input.size(0))
+                    avg_acc5.update(acc5, input.size(0))
 
-            errors = {
-                'Task ID': task_id,
-                'Val loss': avg_loss.avg.item(),
-                'ACC@1': avg_acc1.avg.item(),
-                'ACC@5': avg_acc5.avg.item()
-            }
+                errors = {
+                    'Task ID': task_id,
+                    'Val loss': avg_loss.avg.item(),
+                    'ACC@1': avg_acc1.avg.item(),
+                    'ACC@5': avg_acc5.avg.item()
+                }
 
-            tq_val.set_postfix(errors)
+                tq_val.set_postfix(errors)
 
-        print("Task ID : {}, Val loss : {:.3f}, ACC@1 : {:.3f}, ACC@5 : {:.3f}".format(task_id, avg_loss.avg.item(),
-                                                                                       avg_acc1.avg.item(),
-                                                                                       avg_acc5.avg.item()))
+            print("Task ID : {}, Val loss : {:.3f}, ACC@1 : {:.3f}, ACC@5 : {:.3f}".format(task_id, avg_loss.avg.item(),
+                                                                                           avg_acc1.avg.item(),
+                                                                                           avg_acc5.avg.item()))
 
         return True
 
-    @torch.no_grad()
-    def evaluate_till_now(self, task_id):
-        for i in range(task_id + 1):
-            self._valid_epoch(self.data_loader[i]['val'], i)
 
     def _train_epoch(self, data_loader, epoch, task_id):
         avg_loss = AverageMeter()
@@ -174,23 +170,6 @@ class Trainer(object):
 
         if self.args.distributed and get_world_size() > 1:
             data_loader.sampler.set_epoch(epoch)
-
-        # metric_logger = MetricLogger(delimiter="  ")
-        # metric_logger.add_meter('Lr', SmoothedValue(window_size=1, fmt='{value:.6f}'))
-        # metric_logger.add_meter('Loss', SmoothedValue(window_size=1, fmt='{value:.4f}'))
-        # header = f'Train: Epoch[{epoch + 1:{int(math.log10(self.args.epochs)) + 1}}/{self.args.epochs}]'
-        #
-        # for input, target in metric_logger.log_every(data_loader, self.args.print_freq, header):
-        #     input = input.to(self.device, non_blocking=True)
-        #     target = target.to(self.device, non_blocking=True)
-        #
-        #     with torch.no_grad():
-        #         if self.original_model is not None:
-        #             output = self.original_model(input)
-        #             cls_features = output['pre_logits']
-        #
-        #         else:
-        #             cls_features = None
 
         for input, target in tq_train:
             input = input.to(self.device, non_blocking=True)
