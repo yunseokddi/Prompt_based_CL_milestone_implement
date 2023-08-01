@@ -22,14 +22,14 @@ class ContinualDataLoader(object):
 
         self.transform_train = self.build_transform(True)
         self.transform_val = self.build_transform(False)
-        print(self.args.dataset)
+        print("Dataset : {}".format(self.args.dataset))
 
         if self.args.dataset.startswith('Split-'):
             self.dataset_train, self.dataset_val = self.get_dataset(self.args.dataset.replace('Split-', ''))
 
             self.args.nb_classes = len(self.dataset_val.classes)
 
-            splited_dataset, class_mask = self.split_single_dataset()
+            self.splited_dataset, self.class_mask = self.split_single_dataset()
 
         else:
             if self.args.dataset == '5-datasets':
@@ -44,7 +44,7 @@ class ContinualDataLoader(object):
 
         for i in range(self.args.num_tasks):
             if self.args.dataset.startswith('Split-'):
-                self.dataset_train, self.dataset_val = splited_dataset[i]
+                self.dataset_train, self.dataset_val = self.splited_dataset[i]
 
             else:
                 self.dataset_train, self.dataset_val = self.get_dataset(dataset_list[i])

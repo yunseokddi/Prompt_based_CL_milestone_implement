@@ -71,6 +71,7 @@ def CIFAR100_get_args_parser(subparsers):
     subparsers.add_argument('--dataset', default='Split-CIFAR100', type=str, help='dataset name')
     subparsers.add_argument('--shuffle', default=False, help='shuffle the data order')
     subparsers.add_argument('--output_dir', default='./output', help='path where to save, empty for no saving')
+    subparsers.add_argument('--checkpoint_dir', default='checkpoint', help='path where to save, empty for no saving')
     subparsers.add_argument('--device', default='cuda', help='device to use for training / testing')
     subparsers.add_argument('--seed', default=42, type=int)
     subparsers.add_argument('--eval', action='store_true', help='Perform evaluation only')
