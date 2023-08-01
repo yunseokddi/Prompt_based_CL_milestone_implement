@@ -88,7 +88,7 @@ class Trainer(object):
                 if self.lr_scheduler:
                     self.lr_scheduler.step(epoch)
 
-            self._valid_epoch(task_id)
+            self._valid_epoch(self.data_loader, task_id)
 
             if self.args.output_dir and is_main_process():
                 Path(os.path.join(self.args.output_dir, 'checkpoint')).mkdir(parents=True, exist_ok=True)
