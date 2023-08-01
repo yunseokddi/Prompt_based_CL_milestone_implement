@@ -119,12 +119,12 @@ def main(args):
     trainer = Trainer(model, model_without_ddp, original_model, criterion, data_loader, optimizer, lr_scheduler, device
                       , class_mask, args)
 
-
     if args.eval:
         acc_matrix = np.zeros((args.num_tasks, args.num_tasks))
 
         for task_id in range(args.num_tasks):
-            checkpoint_path = os.path.join(args.output_dir, 'checkpoint/task{}_checkpoint.pth'.format(task_id + 1))
+            checkpoint_path = os.path.join(args.output_dir,
+                                           os.path.join(args.checkpoint_dir, 'task{}_checkpoint.pth'.format(task_id + 1)))
             if os.path.exists(checkpoint_path):
                 print('Loading checkpoint from:', checkpoint_path)
                 checkpoint = torch.load(checkpoint_path)
@@ -185,5 +185,5 @@ CUDA_VISIBLE_DEVICES=2,3 python -m torch.distributed.launch \
         --model vit_base_patch16_224 \
         --batch-size 128
         
-CUDA_VISIBLE_DEVICES=2 python -m torch.distributed.launch --nproc_per_node=1 --use_env train.py cifar100_l2p --eval
+CUDA_VISIBLE_DEVICES=2 python -m torch.distributed.launch --nproc_per_node=1 --use_env train.py cifar100_l2p --checkpoint_dir checkpoint --eval
 '''
