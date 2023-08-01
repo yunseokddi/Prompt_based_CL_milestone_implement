@@ -92,8 +92,8 @@ class Trainer(object):
 
             if self.args.output_dir and is_main_process():
                 Path(os.path.join(self.args.output_dir, 'checkpoint')).mkdir(parents=True, exist_ok=True)
-                checkpoint_path = os.path.join(self.args.output_dir,
-                                               'checkpoint/task{}_checkpoint.pth'.format(task_id + 1))
+                checkpoint_path = os.path.join(self.args.output_dir, self.args.checkpoint_dir,
+                                               'task{}_checkpoint.pth'.format(task_id + 1))
                 state_dict = {
                     'model': self.model_without_ddp.state_dict(),
                     'optimizer': self.optimizer.state_dict(),
