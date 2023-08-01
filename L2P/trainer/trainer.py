@@ -134,6 +134,14 @@ class Trainer(object):
                     output = self.model(input, task_id=task_id, cls_features=cls_features)
                     logits = output['logits']
 
+                    if self.args.task_inc and self.class_mask is not None:
+                        # adding mask to output logits
+                        mask = self.class_mask[task_id]
+                        mask = torch.tensor(mask, dtype=torch.int64).to(self.device)
+                        logits_mask = torch.ones_like(logits, device=self.device) * float('-inf')
+                        logits_mask = logits_mask.index_fill(1, mask, 0.0)
+                        logits = logits + logits_mask
+
                     loss = criterion(logits, target)
 
                     avg_loss.update(loss.data, input.size(0))
