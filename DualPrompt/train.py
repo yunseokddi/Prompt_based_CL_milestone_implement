@@ -193,5 +193,5 @@ CUDA_VISIBLE_DEVICES=2,3 python -m torch.distributed.launch \
         --model vit_base_patch16_224 \
         --batch-size 128
 
-CUDA_VISIBLE_DEVICES=2 python -m torch.distributed.launch --nproc_per_node=1 --use_env train.py cifar100_dualprompt --eval
+CUDA_VISIBLE_DEVICES=2 python -m torch.distributed.launch --nproc_per_node=1 --use_env train.py cifar100_dualprompt --checkpoint_dir checkpoint --eval
 '''
