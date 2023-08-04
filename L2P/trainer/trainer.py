@@ -9,6 +9,7 @@ from utils.utils import get_world_size, MetricLogger, SmoothedValue, is_main_pro
 from tqdm import tqdm
 from timm.utils import accuracy
 from pathlib import Path
+from tensorboard_logger import log_value
 
 
 class Trainer(object):
@@ -232,6 +233,11 @@ class Trainer(object):
             }
 
             tq_train.set_postfix(errors)
+
+        if self.args.tensorboard:
+            log_value('Task_{}_train_loss'.format(task_id), avg_loss.avg, epoch)
+            log_value('Task_{}_train_acc1'.format(task_id), avg_acc1.avg, epoch)
+            log_value('Task_{}_train_acc5'.format(task_id), avg_acc5.avg, epoch)
 
         print("Task ID : {}, Epoch : {}, Train loss : {:.3f}, ACC@1 : {:.3f}, ACC@5 : {:.3f}".format(task_id, epoch,
                                                                                                      avg_loss.avg.item(),

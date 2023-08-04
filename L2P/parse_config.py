@@ -100,3 +100,6 @@ def CIFAR100_get_args_parser(subparsers):
 
     # Misc parameters
     subparsers.add_argument('--print_freq', type=int, default=10, help = 'The frequency of printing')
+
+    # Tensorboard
+    subparsers.add_argument('--tensorboard', default=False, type=bool)

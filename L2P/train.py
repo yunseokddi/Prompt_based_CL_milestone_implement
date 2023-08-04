@@ -19,6 +19,7 @@ from timm.models import create_model
 from timm.scheduler import create_scheduler
 from timm.optim import create_optimizer
 from trainer.trainer import Trainer
+from tensorboard_logger import configure
 
 warnings.filterwarnings('ignore')
 
@@ -163,6 +164,9 @@ if __name__ == "__main__":
     if args.output_dir:
         Path(args.output_dir).mkdir(parents=True, exist_ok=True)
 
+    if args.tensorboard:
+        configure("runs/%s" % (args.dataset))
+
     main(args)
 
     sys.exit(0)
@@ -173,6 +177,7 @@ CUDA_VISIBLE_DEVICES=2,3 nohup python -m torch.distributed.launch \
         cifar100_l2p \
         --model vit_base_patch16_224 \
         --batch-size 128 \
+        --tensorboard True \
         > experiment_2.out \
         &
         
@@ -181,7 +186,8 @@ CUDA_VISIBLE_DEVICES=2,3 python -m torch.distributed.launch \
         --use_env train.py \
         cifar100_l2p \
         --model vit_base_patch16_224 \
-        --batch-size 128
+        --batch-size 128 \
+        --tensorboard True
         
 CUDA_VISIBLE_DEVICES=2 python -m torch.distributed.launch --nproc_per_node=1 --use_env train.py cifar100_l2p --checkpoint_dir checkpoint --eval
 '''
