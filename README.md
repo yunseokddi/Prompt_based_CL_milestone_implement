@@ -21,7 +21,7 @@ pip install -r requirements.txt
 
 ## Folder Structure
 ```angular2html
-OOD_milestone_implement/
+CL_milestone_implement/
 │
 ├── L2P/ - L2P implementation proj
 │   └── data_loader/ - CIFAR100 and 5-dataset loader
