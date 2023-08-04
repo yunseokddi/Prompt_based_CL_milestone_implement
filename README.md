@@ -50,10 +50,29 @@ CUDA_VISIBLE_DEVICES=[GPU idx] python -m torch.distributed.launch \
         cifar100_l2p \
         --model vit_base_patch16_224 \
         --batch-size [Batch size] \
+        --tensorboard True \
 ```
 (2) If you want to evaluate
 ```eval
 CUDA_VISIBLE_DEVICES=[GPU idx] python -m torch.distributed.launch --nproc_per_node=[Node num] --use_env train.py cifar100_l2p --checkpoint_dir checkpoint --eval
+```
+
+### 2. DualPrompt
+**How to run?**
+
+(1) If you want to full-train
+```train
+CUDA_VISIBLE_DEVICES=[GPU idx] python -m torch.distributed.launch \
+        --nproc_per_node=[Node num] \
+        --use_env train.py \
+        cifar100_dualprompt \
+        --model vit_base_patch16_224 \
+        --batch-size [Batch size] \
+        --tensorboard True \
+```
+(2) If you want to evaluate
+```eval
+CUDA_VISIBLE_DEVICES=[GPU idx] python -m torch.distributed.launch --nproc_per_node=[Node num] --use_env train.py cifar100_dualprompt --checkpoint_dir checkpoint --eval
 ```
 
 **Result**
@@ -209,6 +228,7 @@ CUDA_VISIBLE_DEVICES=[GPU idx] python -m torch.distributed.launch --nproc_per_no
 ```
 
 **Result**
+
 (1) CIFAR100
  ```
  Loading checkpoint from: ./output/checkpoint/task1_checkpoint.pth
