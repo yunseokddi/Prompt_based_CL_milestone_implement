@@ -129,6 +129,9 @@ def main(args):
                       class_mask, args)
 
     if args.eval:
+        total_acc_1 = []
+        total_acc_5 = []
+
         for task_id in range(args.num_tasks):
             checkpoint_path = os.path.join(args.output_dir,
                                            os.path.join(args.checkpoint_dir,
@@ -137,11 +140,25 @@ def main(args):
                 print('Loading checkpoint from:', checkpoint_path)
                 checkpoint = torch.load(checkpoint_path)
                 model.module.load_state_dict(checkpoint['model'])
+
             else:
                 print('No checkpoint found at:', checkpoint_path)
                 return
 
-            _ = trainer._valid_epoch(data_loader, task_id)
+            acc1_list, acc5_list = trainer._valid_epoch(data_loader, task_id)
+
+            avg_acc1 = sum(acc1_list) / len(acc1_list)
+            avg_acc5 = sum(acc5_list) / len(acc5_list)
+            print("-" * 80)
+            print("Task ID : {}, AVG ACC 1 : {:.3f}, AVG ACC 5 : {:.3f}".format(task_id+1, avg_acc1, avg_acc5))
+            print("-" * 80)
+            print("")
+
+            total_acc_1.append(avg_acc1)
+            total_acc_5.append(avg_acc5)
+
+        print("Total AVG ACC 1 : {:.3f}".format(sum(total_acc_1)/len(total_acc_1)))
+        print("Total AVG ACC 5 : {:.3f}".format(sum(total_acc_5) / len(total_acc_5)))
 
         return
 

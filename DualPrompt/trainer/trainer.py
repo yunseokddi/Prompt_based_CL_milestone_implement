@@ -190,6 +190,8 @@ class Trainer(object):
 
     @torch.no_grad()
     def _valid_epoch(self, data_loader, task_id):
+        acc1_list = []
+        acc5_list= []
         for i in range(task_id + 1):
             avg_loss = AverageMeter()
             avg_acc1 = AverageMeter()
@@ -242,8 +244,11 @@ class Trainer(object):
 
                 tq_val.set_postfix(errors)
 
-            print("Task ID : {}, Val loss : {:.3f}, ACC@1 : {:.3f}, ACC@5 : {:.3f}".format(task_id, avg_loss.avg.item(),
+            print("Task ID : {}, Val loss : {:.3f}, ACC@1 : {:.3f}, ACC@5 : {:.3f}".format(task_id+1, avg_loss.avg.item(),
                                                                                            avg_acc1.avg.item(),
                                                                                            avg_acc5.avg.item()))
 
-        return True
+            acc1_list.append(avg_acc1.avg.item())
+            acc5_list.append(avg_acc5.avg.item())
+
+        return acc1_list, acc5_list
