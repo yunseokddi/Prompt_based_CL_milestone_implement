@@ -132,6 +132,8 @@ def main(args):
         total_acc_1 = []
         total_acc_5 = []
 
+        forgetting = []
+
         for task_id in range(args.num_tasks):
             checkpoint_path = os.path.join(args.output_dir,
                                            os.path.join(args.checkpoint_dir,
@@ -157,8 +159,14 @@ def main(args):
             total_acc_1.append(avg_acc1)
             total_acc_5.append(avg_acc5)
 
+            forgetting.append(acc1_list)
+
+
+
         print("Total AVG ACC 1 : {:.3f}".format(sum(total_acc_1)/len(total_acc_1)))
         print("Total AVG ACC 5 : {:.3f}".format(sum(total_acc_5) / len(total_acc_5)))
+
+        print(forgetting)
 
         return
 
