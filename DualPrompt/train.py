@@ -152,7 +152,7 @@ def main(args):
             avg_acc1 = sum(acc1_list) / len(acc1_list)
             avg_acc5 = sum(acc5_list) / len(acc5_list)
             print("-" * 80)
-            print("Task ID : {}, AVG ACC 1 : {:.3f}, AVG ACC 5 : {:.3f}".format(task_id+1, avg_acc1, avg_acc5))
+            print("Task ID : {}, AVG ACC 1 : {:.3f}, AVG ACC 5 : {:.3f}".format(task_id + 1, avg_acc1, avg_acc5))
             print("-" * 80)
             print("")
 
@@ -161,12 +161,28 @@ def main(args):
 
             forgetting.append(acc1_list)
 
-
-
-        print("Total AVG ACC 1 : {:.3f}".format(sum(total_acc_1)/len(total_acc_1)))
+        print("Total AVG ACC 1 : {:.3f}".format(sum(total_acc_1) / len(total_acc_1)))
         print("Total AVG ACC 5 : {:.3f}".format(sum(total_acc_5) / len(total_acc_5)))
 
-        print(forgetting)
+        num = 0
+
+        forgetting_list = []
+
+        for i in range(args.num_tasks - 1):
+            max_num = -1.0
+            min_num = 300.0
+            for j in range(num, args.num_tasks):
+                if forgetting[j][i] > max_num:
+                    max_num = forgetting[j][i]
+
+                if forgetting[j][i] < min_num:
+                    min_num = forgetting[j][i]
+
+            forgetting_list.append(max_num - min_num)
+
+            num += 1
+
+        print("Total : forgetting : {:.3f}".format(sum(forgetting_list) / len(forgetting_list)))
 
         return
 
