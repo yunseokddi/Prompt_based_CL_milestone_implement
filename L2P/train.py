@@ -11,7 +11,7 @@ import model.model
 
 import warnings
 
-from parse_config import CIFAR100_get_args_parser
+from parse_config import CIFAR100_get_args_parser, imr_get_args_parser
 from pathlib import Path
 from utils.utils import init_distributed_mode
 from data_loader.data_loaders import ContinualDataLoader
@@ -195,6 +195,10 @@ if __name__ == "__main__":
         config_parser = subparser.add_parser('cifar100_l2p', help='Split-CIFAR100 L2P configs')
         CIFAR100_get_args_parser(config_parser)
 
+    elif config == 'imr_l2p':
+        config_parser = subparser.add_parser('imr_l2p', help='Split-ImageNet-R DualPrompt configs')
+        imr_get_args_parser(config_parser)
+
     else:
         assert "Check your param."
 
@@ -210,6 +214,8 @@ if __name__ == "__main__":
 
     sys.exit(0)
 '''
+
+---------------------- Split-CIFAR100 train ----------------------
 CUDA_VISIBLE_DEVICES=2,3 nohup python -m torch.distributed.launch \
         --nproc_per_node=2 \
         --use_env train.py \
@@ -228,5 +234,28 @@ CUDA_VISIBLE_DEVICES=2,3 python -m torch.distributed.launch \
         --batch-size 128 \
         --tensorboard True
         
+CUDA_VISIBLE_DEVICES=2,3 nohup python -m torch.distributed.launch \
+        --nproc_per_node=2 \
+        --use_env train.py \
+        imr_l2p \
+        --model vit_base_patch16_224 \
+        --batch-size 128 \
+        --tensorboard True \
+        > imr_experiment_1.out \
+        &
+        
+CUDA_VISIBLE_DEVICES=2,3 python -m torch.distributed.launch \
+        --nproc_per_node=2 \
+        --use_env train.py \
+        imr_l2p \
+        --model vit_base_patch16_224 \
+        --batch-size 128 \
+        --tensorboard True
+        
+---------------------- Split-CIFAR100 test ----------------------
 CUDA_VISIBLE_DEVICES=2 python -m torch.distributed.launch --nproc_per_node=1 --use_env train.py cifar100_l2p --checkpoint_dir checkpoint --eval
+
+---------------------- Split-ImageNet-R test ----------------------
+CUDA_VISIBLE_DEVICES=2 python -m torch.distributed.launch --nproc_per_node=1 --use_env train.py imr_l2p --checkpoint_dir checkpoint_imr --eval
+
 '''

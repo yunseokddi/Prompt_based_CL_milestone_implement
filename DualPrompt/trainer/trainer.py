@@ -181,7 +181,7 @@ class Trainer(object):
             log_value('Task_{}_train_acc1'.format(task_id), avg_acc1.avg, epoch)
             log_value('Task_{}_train_acc5'.format(task_id), avg_acc5.avg, epoch)
 
-        print("Task ID : {}, Epoch : {}, Train loss : {:.3f}, ACC@1 : {:.3f}, ACC@5 : {:.3f}".format(i, epoch,
+        print("Task ID : {}, Epoch : {}, Train loss : {:.3f}, ACC@1 : {:.3f}, ACC@5 : {:.3f}".format(task_id, epoch,
                                                                                                      avg_loss.avg.item(),
                                                                                                      avg_acc1.avg.item(),
                                                                                                      avg_acc5.avg.item()))

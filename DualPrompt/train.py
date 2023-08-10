@@ -10,7 +10,7 @@ import datetime
 import os
 import model.model
 
-from parse_config import CIFAR100_get_args_parser
+from parse_config import CIFAR100_get_args_parser, imr_get_args_parser
 from pathlib import Path
 from utils.utils import init_distributed_mode
 from data_loader.data_loaders import ContinualDataLoader
@@ -206,6 +206,11 @@ if __name__ == "__main__":
         config_parser = subparser.add_parser('cifar100_dualprompt', help='Split-CIFAR100 DualPrompt configs')
         CIFAR100_get_args_parser(config_parser)
 
+    elif config == 'imr_dualprompt':
+        config_parser = subparser.add_parser('imr_dualprompt', help='Split-ImageNet-R DualPrompt configs')
+        imr_get_args_parser(config_parser)
+
+
     else:
         assert "Check dataset"
 
@@ -222,6 +227,8 @@ if __name__ == "__main__":
     sys.exit(0)
 
 '''
+
+---------------------- Split-CIFAR100 train ----------------------
 CUDA_VISIBLE_DEVICES=2,3 nohup python -m torch.distributed.launch \
         --nproc_per_node=2 \
         --use_env train.py \
@@ -239,6 +246,29 @@ CUDA_VISIBLE_DEVICES=2,3 python -m torch.distributed.launch \
         --model vit_base_patch16_224 \
         --batch-size 128 \
         --tensorboard True
+        
+---------------------- Split-ImageNet-R train ----------------------
+CUDA_VISIBLE_DEVICES=2,3 nohup python -m torch.distributed.launch \
+        --nproc_per_node=2 \
+        --use_env train.py \
+        imr_dualprompt \
+        --model vit_base_patch16_224 \
+        --batch-size 128 \
+        --tensorboard True \
+        > imr_experiment_1.out \
+        &
+        
+CUDA_VISIBLE_DEVICES=2,3 python -m torch.distributed.launch \
+        --nproc_per_node=2 \
+        --use_env train.py \
+        imr_dualprompt \
+        --model vit_base_patch16_224 \
+        --batch-size 128 \
+        --tensorboard True
 
-CUDA_VISIBLE_DEVICES=2 python -m torch.distributed.launch --nproc_per_node=1 --use_env train.py cifar100_dualprompt --checkpoint_dir checkpoint --eval
+---------------------- Split-CIFAR100 test ----------------------
+CUDA_VISIBLE_DEVICES=2 python -m torch.distributed.launch --nproc_per_node=1 --use_env train.py cifar100_dualprompt --checkpoint_dir checkpoint_cifar100 --eval
+
+---------------------- Split-ImageNet-R test ----------------------
+CUDA_VISIBLE_DEVICES=0 python -m torch.distributed.launch --nproc_per_node=1 --use_env train.py imr_dualprompt --checkpoint_dir checkpoint_imr --eval
 '''
