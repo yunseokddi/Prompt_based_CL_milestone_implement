@@ -1,4 +1,4 @@
-# CL_milestone_implement
+# Prompt_based_CL_milestone
 
 This is Pytorch implementation of the Prompt-based Continual Learning with [pytorch-template](https://github.com/victoresque/pytorch-template) in the following milestone papers:
 
