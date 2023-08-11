@@ -127,7 +127,8 @@ def main(args):
 
         for task_id in range(args.num_tasks):
             checkpoint_path = os.path.join(args.output_dir,
-                                           os.path.join(args.checkpoint_dir, 'task{}_checkpoint.pth'.format(task_id + 1)))
+                                           os.path.join(args.checkpoint_dir,
+                                                        'task{}_checkpoint.pth'.format(task_id + 1)))
             if os.path.exists(checkpoint_path):
                 print('Loading checkpoint from:', checkpoint_path)
                 checkpoint = torch.load(checkpoint_path)
@@ -141,7 +142,7 @@ def main(args):
             avg_acc1 = sum(acc1_list) / len(acc1_list)
             avg_acc5 = sum(acc5_list) / len(acc5_list)
             print("-" * 80)
-            print("Task ID : {}, AVG ACC 1 : {:.3f}, AVG ACC 5 : {:.3f}".format(task_id+1, avg_acc1, avg_acc5))
+            print("Task ID : {}, AVG ACC 1 : {:.3f}, AVG ACC 5 : {:.3f}".format(task_id + 1, avg_acc1, avg_acc5))
             print("-" * 80)
             print("")
 
@@ -159,15 +160,11 @@ def main(args):
 
         for i in range(args.num_tasks - 1):
             max_num = -1.0
-            min_num = 300.0
             for j in range(num, args.num_tasks):
                 if forgetting[j][i] > max_num:
                     max_num = forgetting[j][i]
 
-                if forgetting[j][i] < min_num:
-                    min_num = forgetting[j][i]
-
-            forgetting_list.append(max_num - min_num)
+            forgetting_list.append(max_num - forgetting[args.num_tasks - 1][i])
 
             num += 1
 
@@ -253,7 +250,7 @@ CUDA_VISIBLE_DEVICES=2,3 python -m torch.distributed.launch \
         --tensorboard True
         
 ---------------------- Split-CIFAR100 test ----------------------
-CUDA_VISIBLE_DEVICES=2 python -m torch.distributed.launch --nproc_per_node=1 --use_env train.py cifar100_l2p --checkpoint_dir checkpoint --eval
+CUDA_VISIBLE_DEVICES=2 python -m torch.distributed.launch --nproc_per_node=1 --use_env train.py cifar100_l2p --checkpoint_dir checkpoint_cifar100 --eval
 
 ---------------------- Split-ImageNet-R test ----------------------
 CUDA_VISIBLE_DEVICES=2 python -m torch.distributed.launch --nproc_per_node=1 --use_env train.py imr_l2p --checkpoint_dir checkpoint_imr --eval

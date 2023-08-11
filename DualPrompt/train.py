@@ -170,15 +170,11 @@ def main(args):
 
         for i in range(args.num_tasks - 1):
             max_num = -1.0
-            min_num = 300.0
             for j in range(num, args.num_tasks):
                 if forgetting[j][i] > max_num:
                     max_num = forgetting[j][i]
 
-                if forgetting[j][i] < min_num:
-                    min_num = forgetting[j][i]
-
-            forgetting_list.append(max_num - min_num)
+            forgetting_list.append(max_num - forgetting[args.num_tasks - 1][i])
 
             num += 1
 
