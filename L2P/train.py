@@ -193,7 +193,7 @@ if __name__ == "__main__":
         CIFAR100_get_args_parser(config_parser)
 
     elif config == 'imr_l2p':
-        config_parser = subparser.add_parser('imr_l2p', help='Split-ImageNet-R DualPrompt configs')
+        config_parser = subparser.add_parser('imr_l2p', help='Split-ImageNet-R L2P configs')
         imr_get_args_parser(config_parser)
 
     else:
