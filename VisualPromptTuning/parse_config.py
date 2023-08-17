@@ -16,6 +16,7 @@ def get_args_parser(subparsers):
 
     # Data parameters
     subparsers.add_argument('--dataset', default='CUB', type=str, help='dataset name')
+    subparsers.add_argument('--data_dir', default='/home/dorosee/yunseok/data/VPT_dataset', type=str, help='dataset path')
     subparsers.add_argument('--output_dir', default='./output', type=str, help='Model result dir')
     subparsers.add_argument('--device', default='cuda', help='device to use for training / testing')
     subparsers.add_argument('--seed', default=42, type=int)
