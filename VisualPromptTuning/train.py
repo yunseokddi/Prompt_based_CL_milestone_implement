@@ -9,6 +9,7 @@ from parse_config import get_args_parser
 from pathlib import Path
 from tensorboard_logger import configure
 from utils.utils import init_distributed_mode
+from data_loader.data_loaders import DataLoader
 
 warnings.filterwarnings('ignore')
 
@@ -27,7 +28,10 @@ def main(args):
     np.random.seed(seed)
     random.seed(seed)
 
-    print("finish")
+    data_loader = DataLoader(args)
+
+    train_loader, val_loader = data_loader.get_dataloader()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser('VPT training and evaluation configs')
@@ -35,8 +39,8 @@ if __name__ == "__main__":
 
     subparser = parser.add_subparsers(dest='subparser_name')
 
-    if config == "CUB_VPT":
-        config_parser = subparser.add_parser('CUB_VPT', help='CUB2000 Visual Prompt Tuning')
+    if config == "CIFAR_VPT":
+        config_parser = subparser.add_parser('CIFAR_VPT', help='CUB2000 Visual Prompt Tuning')
         get_args_parser(config_parser)
 
     args = parser.parse_args()
@@ -53,7 +57,7 @@ if __name__ == "__main__":
 CUDA_VISIBLE_DEVICES=3 python -m torch.distributed.launch \
         --nproc_per_node=1 \
         --use_env train.py \
-        CUB_VPT \
+        CIFAR_VPT \
         --model vit_base_patch16_224 \
         --batch-size 128 \
         --tensorboard True

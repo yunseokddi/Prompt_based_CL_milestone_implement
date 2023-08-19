@@ -15,12 +15,20 @@ def get_args_parser(subparsers):
     subparsers.add_argument('--dist_url', default='env://', help='url used to set up distributed training')
 
     # Data parameters
-    subparsers.add_argument('--dataset', default='CUB', type=str, help='dataset name')
-    subparsers.add_argument('--data_dir', default='/home/dorosee/yunseok/data/VPT_dataset', type=str, help='dataset path')
+    subparsers.add_argument('--dataset', default='CIFAR100', type=str, help='dataset name')
+    subparsers.add_argument('--data_path', default='/home/dorosee/yunseok/data/VPT_dataset', type=str, help='dataset path')
     subparsers.add_argument('--output_dir', default='./output', type=str, help='Model result dir')
     subparsers.add_argument('--device', default='cuda', help='device to use for training / testing')
+    subparsers.add_argument('--class_num', default=100, type=int)
+    subparsers.add_argument('--input_size', default=224, type=int)
     subparsers.add_argument('--seed', default=42, type=int)
     subparsers.add_argument('--gpu', default=[2,3], type=list)
+    subparsers.add_argument('--num_workers', default=16, type=int)
+    subparsers.add_argument('--pin-mem', action='store_true',
+                            help='Pin CPU memory in DataLoader for more efficient (sometimes) transfer to GPU.')
+    subparsers.add_argument('--no-pin-mem', action='store_false', dest='pin_mem',
+                            help='')
+    subparsers.set_defaults(pin_mem=True)
 
     # Tensorboard
     subparsers.add_argument('--tensorboard', default=False, type=bool)
