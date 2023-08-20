@@ -449,7 +449,7 @@ class VisionTransformer(nn.Module):
 
         self.num_classes = num_classes
         self.global_pool = global_pool
-        self.num_features = self.embed_dim = embed_dim  # num_features for consistency with other models
+        self.num_features = self.embed_dim = embed_dim  # num_features for consistency with other model
         self.num_prefix_tokens = 1 if class_token else 0
         self.no_embed_class = no_embed_class
         self.grad_checkpointing = False
@@ -916,7 +916,7 @@ def checkpoint_filter_fn(
         if 'patch_embed.proj.weight' in k:
             O, I, H, W = model.patch_embed.proj.weight.shape
             if len(v.shape) < 4:
-                # For old models that I trained prior to conv based patchification
+                # For old model that I trained prior to conv based patchification
                 O, I, H, W = model.patch_embed.proj.weight.shape
                 v = v.reshape(O, -1, H, W)
             if v.shape[-1] != W or v.shape[-2] != H:
@@ -939,7 +939,7 @@ def checkpoint_filter_fn(
                 verbose=True,
             )
         elif adapt_layer_scale and 'gamma_' in k:
-            # remap layer-scale gamma into sub-module (deit3 models)
+            # remap layer-scale gamma into sub-module (deit3 model)
             k = re.sub(r'gamma_([0-9])', r'ls\1.gamma', k)
         elif 'pre_logits' in k:
             # NOTE representation layer removed as not used in latest 21k/1k pretrained weights
@@ -1022,7 +1022,7 @@ default_cfgs = generate_default_cfgs({
         hf_hub_id='timm/',
         custom_load=True, input_size=(3, 384, 384), crop_pct=1.0),
 
-    # patch models (weights from official Google JAX impl) pretrained on in21k FT on in1k
+    # patch model (weights from official Google JAX impl) pretrained on in21k FT on in1k
     'vit_base_patch16_224.orig_in21k_ft_in1k': _cfg(
         url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-vitjx/jx_vit_base_p16_224-80ecf9dd.pth',
         hf_hub_id='timm/'),
@@ -1066,7 +1066,7 @@ default_cfgs = generate_default_cfgs({
     'vit_giant_patch14_224.untrained': _cfg(url=''),
     'vit_gigantic_patch14_224.untrained': _cfg(url=''),
 
-    # patch models, imagenet21k (weights from official Google JAX impl)
+    # patch model, imagenet21k (weights from official Google JAX impl)
     'vit_large_patch32_224.orig_in21k': _cfg(
         url='https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-vitjx/jx_vit_large_patch32_224_in21k-9046d2e7.pth',
         hf_hub_id='timm/',
@@ -1106,7 +1106,7 @@ default_cfgs = generate_default_cfgs({
         hf_hub_id='timm/',
         custom_load=True, num_classes=21843),
 
-    # SAM trained models (https://arxiv.org/abs/2106.01548)
+    # SAM trained model (https://arxiv.org/abs/2106.01548)
     'vit_base_patch32_224.sam_in1k': _cfg(
         url='https://storage.googleapis.com/vit_models/sam/ViT-B_32.npz', custom_load=True,
         hf_hub_id='timm/'),
@@ -1477,11 +1477,11 @@ default_cfgs = generate_default_cfgs({
 
 def _create_vision_transformer(variant, pretrained=False, **kwargs):
     if kwargs.get('features_only', None):
-        raise RuntimeError('features_only not implemented for Vision Transformer models.')
+        raise RuntimeError('features_only not implemented for Vision Transformer model.')
 
     if 'flexi' in variant:
-        # FIXME Google FlexiViT pretrained models have a strong preference for bilinear patch / embed
-        # interpolation, other pretrained models resize better w/ anti-aliased bicubic interpolation.
+        # FIXME Google FlexiViT pretrained model have a strong preference for bilinear patch / embed
+        # interpolation, other pretrained model resize better w/ anti-aliased bicubic interpolation.
         _filter_fn = partial(checkpoint_filter_fn, interpolation='bilinear', antialias=False)
     else:
         _filter_fn = checkpoint_filter_fn
@@ -1861,7 +1861,7 @@ def vit_gigantic_patch14_clip_224(pretrained=False, **kwargs) -> VisionTransform
     return model
 
 
-# Experimental models below
+# Experimental model below
 
 @register_model
 def vit_base_patch32_plus_256(pretrained=False, **kwargs) -> VisionTransformer:

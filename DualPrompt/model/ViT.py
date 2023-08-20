@@ -58,7 +58,7 @@ def _cfg(url='', **kwargs):
 
 
 default_cfgs = {
-    # patch models (weights from official Google JAX impl)
+    # patch model (weights from official Google JAX impl)
     'vit_tiny_patch16_224': _cfg(
         url='https://storage.googleapis.com/vit_models/augreg/'
             'Ti_16-i21k-300ep-lr_0.001-aug_none-wd_0.03-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.03-res_224.npz'),
@@ -119,7 +119,7 @@ default_cfgs = {
     'vit_gigantic_patch14_224': _cfg(url=''),
 
 
-    # patch models, imagenet21k (weights from official Google JAX impl)
+    # patch model, imagenet21k (weights from official Google JAX impl)
     'vit_tiny_patch16_224_in21k': _cfg(
         url='https://storage.googleapis.com/vit_models/augreg/Ti_16-i21k-300ep-lr_0.001-aug_none-wd_0.03-do_0.0-sd_0.0.npz',
         num_classes=21843),
@@ -149,7 +149,7 @@ default_cfgs = {
         hf_hub_id='timm/vit_huge_patch14_224_in21k',
         num_classes=21843),
 
-    # SAM trained models (https://arxiv.org/abs/2106.01548)
+    # SAM trained model (https://arxiv.org/abs/2106.01548)
     'vit_base_patch32_224_sam': _cfg(
         url='https://storage.googleapis.com/vit_models/sam/ViT-B_32.npz'),
     'vit_base_patch16_224_sam': _cfg(
@@ -374,7 +374,7 @@ class VisionTransformer(nn.Module):
         self.img_size = img_size
         self.num_classes = num_classes
         self.global_pool = global_pool
-        self.num_features = self.embed_dim = embed_dim  # num_features for consistency with other models
+        self.num_features = self.embed_dim = embed_dim  # num_features for consistency with other model
         self.class_token = class_token
         self.num_prefix_tokens = 1 if class_token else 0
         self.no_embed_class = no_embed_class
@@ -777,12 +777,12 @@ def checkpoint_filter_fn(state_dict, model, adapt_layer_scale=False):
     import re
     out_dict = {}
     if 'model' in state_dict:
-        # For deit models
+        # For deit model
         state_dict = state_dict['model']
 
     for k, v in state_dict.items():
         if 'patch_embed.proj.weight' in k and len(v.shape) < 4:
-            # For old models that I trained prior to conv based patchification
+            # For old model that I trained prior to conv based patchification
             O, I, H, W = model.patch_embed.proj.weight.shape
             v = v.reshape(O, -1, H, W)
         elif k == 'pos_embed' and v.shape[1] != model.pos_embed.shape[1]:
@@ -794,7 +794,7 @@ def checkpoint_filter_fn(state_dict, model, adapt_layer_scale=False):
                 model.patch_embed.grid_size
             )
         elif adapt_layer_scale and 'gamma_' in k:
-            # remap layer-scale gamma into sub-module (deit3 models)
+            # remap layer-scale gamma into sub-module (deit3 model)
             k = re.sub(r'gamma_([0-9])', r'ls\1.gamma', k)
         elif 'pre_logits' in k:
             # NOTE representation layer removed as not used in latest 21k/1k pretrained weights
@@ -805,7 +805,7 @@ def checkpoint_filter_fn(state_dict, model, adapt_layer_scale=False):
 
 def _create_vision_transformer(variant, pretrained=False, **kwargs):
     if kwargs.get('features_only', None):
-        raise RuntimeError('features_only not implemented for Vision Transformer models.')
+        raise RuntimeError('features_only not implemented for Vision Transformer model.')
 
     pretrained_cfg = resolve_pretrained_cfg(variant, pretrained_cfg=kwargs.pop('pretrained_cfg', None))
     model = build_model_with_cfg(
@@ -1171,7 +1171,7 @@ def vit_base_patch16_224_miil(pretrained=False, **kwargs):
     return model
 
 
-# Experimental models below
+# Experimental model below
 
 @register_model
 def vit_base_patch32_plus_256(pretrained=False, **kwargs):
