@@ -10,6 +10,7 @@ from pathlib import Path
 from tensorboard_logger import configure
 from utils.utils import init_distributed_mode
 from data_loader.data_loaders import DataLoader
+from model.model import build_model
 
 warnings.filterwarnings('ignore')
 
@@ -32,12 +33,17 @@ def main(args):
 
     train_loader, val_loader = data_loader.get_dataloader()
 
+    model = build_model(args)
+
+    print("finish")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser('VPT training and evaluation configs')
     config = parser.parse_known_args()[-1][0]
 
-    subparser = parser.add_subparsers(dest='subparser_name')
+    subparser = parser.add_subparsers(dest='VPT parser')
+
 
     if config == "CIFAR_VPT":
         config_parser = subparser.add_parser('CIFAR_VPT', help='CUB2000 Visual Prompt Tuning')
@@ -54,11 +60,10 @@ if __name__ == "__main__":
     main(args)
 
 '''
-CUDA_VISIBLE_DEVICES=3 python -m torch.distributed.launch \
+CUDA_VISIBLE_DEVICES=2,3 python -m torch.distributed.launch \
         --nproc_per_node=1 \
         --use_env train.py \
         CIFAR_VPT \
-        --model vit_base_patch16_224 \
         --batch-size 128 \
         --tensorboard True
 '''
