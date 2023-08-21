@@ -2,7 +2,7 @@ def get_args_parser(subparsers):
     # subparsers.add_argument('--', default=, type=, help='')
     subparsers.add_argument('--batch-size', default=24, type=int, help='Batch size per device')
     subparsers.add_argument('--epochs', default=50, type=int)
-    subparsers.add_argument('--load_pretrain', default=False, type=bool, help='Load pretrained model')
+    subparsers.add_argument('--load_pretrain', default=True, type=bool, help='Load pretrained model')
     subparsers.add_argument('--vis', default=False, type=bool, help='Visualization')
 
     # Model parameters
@@ -12,6 +12,8 @@ def get_args_parser(subparsers):
                             help='Name of model type')
     subparsers.add_argument('--DBG', default=False, type=bool, help='Debugging mode')
     subparsers.add_argument('--TRANSFER_TYPE', default="prompt", type=str, help='Transfer learning type')
+    subparsers.add_argument('--MLP_NUM', default=0, type=int,
+                            help='number of MLP')
 
     # distributed training parameters
     subparsers.add_argument('--world_size', default=1, type=int,
@@ -23,7 +25,12 @@ def get_args_parser(subparsers):
     subparsers.add_argument('--data_path', default='/home/dorosee/yunseok/data/VPT_dataset', type=str,
                             help='dataset path')
     subparsers.add_argument('--output_dir', default='./output', type=str, help='Model result dir')
-    subparsers.add_argument('--weight_dir', default='./checkpoint', type=str, help='Model result dir')
+    subparsers.add_argument('--weight_dir',
+                            default='/home/dorosee/yunseok/clone_src/CL_milestone_implement/VisualPromptTuning/checkpoint/',
+                            type=str, help='Model result dir')
+    subparsers.add_argument('--resume_dir',
+                            default='',
+                            type=str, help='Model result dir')
     subparsers.add_argument('--device', default='cuda', help='device to use for training / testing')
     subparsers.add_argument('--class_num', default=100, type=int)
     subparsers.add_argument('--input_size', default=224, type=int)
@@ -76,3 +83,33 @@ def get_args_parser(subparsers):
                             help='Prompt training dropout rate')
     subparsers.add_argument('--SAVE_FOR_EACH_EPOCH', default=False, type=bool,
                             help='if true, it save prompt weight for each epoch')
+
+    # Optimizer parameters // Fix help comment
+    subparsers.add_argument('--LOSS', default="softmax", type=str,
+                            help='Prompt pool type')
+    subparsers.add_argument('--LOSS_ALPHA', default=0.01, type=float,
+                            help='Prompt pool type')
+    subparsers.add_argument('--OPTIMIZER', default="sgd", type=str,
+                            help='Prompt pool type')  # or "adamw"
+    subparsers.add_argument('--MOMENTUM', default=0.9, type=float,
+                            help='Prompt pool type')
+    subparsers.add_argument('--WEIGHT_DECAY', default=0.0001, type=float,
+                            help='Prompt pool type')
+    subparsers.add_argument('--WEIGHT_DECAY_BIAS', default=0, type=int,
+                            help='Prompt pool type')
+    subparsers.add_argument('--PATIENCE', default=300, type=int,
+                            help='Prompt pool type')
+    subparsers.add_argument('--SCHEDULER', default="cosine", type=str,
+                            help='Prompt pool type')
+    subparsers.add_argument('--BASE_LR', default=0.01, type=float,
+                            help='Prompt pool type')
+    subparsers.add_argument('--BIAS_MULTIPLIER', default=1., type=float,
+                            help='Prompt pool type')  # for prompt + bias
+    subparsers.add_argument('--WARMUP_EPOCH', default=5, type=int,
+                            help='Prompt pool type')
+    subparsers.add_argument('--TOTAL_EPOCH', default=30, type=int,
+                            help='Prompt pool type')
+    subparsers.add_argument('--LOG_EVERY_N', default=1000, type=int,
+                            help='Prompt pool type')
+    subparsers.add_argument('--DBG_TRAINABLE', default=False, type=bool,
+                            help='if true, it save prompt weight for each epoch')  # if True, will print the name of trainable params

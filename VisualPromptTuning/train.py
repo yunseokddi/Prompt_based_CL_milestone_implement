@@ -4,6 +4,7 @@ import warnings
 import argparse
 import numpy as np
 import random
+import torchsummary
 
 from parse_config import get_args_parser
 from pathlib import Path
@@ -11,6 +12,10 @@ from tensorboard_logger import configure
 from utils.utils import init_distributed_mode
 from data_loader.data_loaders import DataLoader
 from model.model import build_model
+from trainer.optimizer import create_optimizer
+from trainer.scheduler import create_scheduler
+from trainer.losses import create_loss
+from trainer.trainer import Trainer
 
 warnings.filterwarnings('ignore')
 
@@ -34,6 +39,13 @@ def main(args):
     train_loader, val_loader = data_loader.get_dataloader()
 
     model = build_model(args)
+
+    criterion =create_loss(args)
+
+    optimizer = create_optimizer(model, args)
+    lr_scheduler = create_scheduler(optimizer, args)
+
+    trainer = Trainer(model, criterion, train_loader, optimizer, lr_scheduler, device, args)
 
     print("finish")
 
