@@ -2,6 +2,7 @@ from torchvision import datasets, transforms
 from .datasets import *
 from utils.utils import get_world_size, get_rank
 from torch.utils.data.dataset import Subset
+from collections import Counter
 
 
 class DataLoader(object):
@@ -164,3 +165,13 @@ class DataLoader(object):
             )
 
         return transform
+
+    def get_class_num(self):
+        return self.args.class_num
+
+    def get_class_weights(self, weight_type):
+        """get a list of class weight, return a list float"""
+
+        cls_num = self.get_class_num()
+
+        return [1.0] * cls_num

@@ -1,6 +1,6 @@
 def get_args_parser(subparsers):
     # subparsers.add_argument('--', default=, type=, help='')
-    subparsers.add_argument('--batch-size', default=24, type=int, help='Batch size per device')
+    subparsers.add_argument('--batch-size', default=128, type=int, help='Batch size per device')
     subparsers.add_argument('--epochs', default=50, type=int)
     subparsers.add_argument('--load_pretrain', default=True, type=bool, help='Load pretrained model')
     subparsers.add_argument('--vis', default=False, type=bool, help='Visualization')
@@ -41,13 +41,16 @@ def get_args_parser(subparsers):
                             help='Pin CPU memory in DataLoader for more efficient (sometimes) transfer to GPU.')
     subparsers.add_argument('--no-pin-mem', action='store_false', dest='pin_mem',
                             help='')
+    subparsers.add_argument('--CLASS_WEIGHTS_TYPE',
+                            default='none',
+                            type=str, help='cls weight')
     subparsers.set_defaults(pin_mem=True)
 
     # Tensorboard
     subparsers.add_argument('--tensorboard', default=False, type=bool)
 
     # Prompt parameters
-    subparsers.add_argument('--NUM_TOKENS', default=5, type=int, help='Num of prompt tokens')
+    subparsers.add_argument('--NUM_TOKENS', default=50, type=int, help='Num of prompt tokens')
     subparsers.add_argument('--LOCATION', default="prepend", type=str, help='Num of prompt tokens')
     # prompt initalizatioin:
     # (1) default "random"

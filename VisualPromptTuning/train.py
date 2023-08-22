@@ -4,6 +4,7 @@ import warnings
 import argparse
 import numpy as np
 import random
+import os
 import torchsummary
 
 from parse_config import get_args_parser
@@ -45,7 +46,9 @@ def main(args):
     optimizer = create_optimizer(model, args)
     lr_scheduler = create_scheduler(optimizer, args)
 
-    trainer = Trainer(model, criterion, train_loader, optimizer, lr_scheduler, device, args)
+    trainer = Trainer(model, criterion, data_loader, optimizer, lr_scheduler, device, args)
+
+    trainer.train()
 
     print("finish")
 
@@ -72,9 +75,9 @@ if __name__ == "__main__":
     main(args)
 
 '''
-CUDA_VISIBLE_DEVICES=2,3 python -m torch.distributed.launch \
+CUDA_VISIBLE_DEVICES=2,3 torchrun \
         --nproc_per_node=1 \
-        --use_env train.py \
+        train.py \
         CIFAR_VPT \
         --batch-size 128 \
         --tensorboard True
