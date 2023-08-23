@@ -52,6 +52,7 @@ def main(args):
         drop_path_rate=args.drop_path,
         drop_block_rate=None,
     )
+    # print(original_model)
 
     print("Creating model: {}".format(args.model))
 
@@ -77,6 +78,8 @@ def main(args):
 
     original_model.to(device)
     model.to(device)
+
+    # print("Device : {}".format(device))
 
     if args.freeze:
         for p in original_model.parameters():
