@@ -51,7 +51,8 @@ def build_model(args):
 
         assert "Check model type"
 
-    model = model.cuda(device=args.gpu)
+    # model = model.cuda(device=args.gpu)
+    model.to(args.device)
     model = torch.nn.parallel.DistributedDataParallel(
         module=model, device_ids=[args.gpu], output_device=args.gpu,
         find_unused_parameters=True
@@ -101,10 +102,10 @@ class ViT(nn.Module):
             self.args, load_pretrain, vis
         )
 
-        self.setup_size()
+        self.setup_side()
         self.setup_head(args)
 
-    def setup_size(self):
+    def setup_side(self):
         self.side = None
 
     def setup_head(self, args):
@@ -114,11 +115,17 @@ class ViT(nn.Module):
             special_bias=True
         )
 
+        # print("input_dim : {}".format(self.feat_dim)) 768
+        # print("mlp_dim : {}".format([self.feat_dim] * self.args.MLP_NUM + [args.class_num])) 100
+        # print("mlp num : {}".format(self.args.MLP_NUM)) 0
+        # print("class_num : {}".format([self.args.class_num])) 100
+
     def build_backbone(self, args, load_pretrain, vis):
         transfer_type = args.TRANSFER_TYPE
         self.enc, self.feat_dim = build_vit_sup_models(
             self.args, load_pretrain, vis
         )
+        # print("feat_dim : {}".format(self.feat_dim))  # 768
         # linear, prompt, cls, cls+prompt, partial_1
         if transfer_type == "partial-1":
             total_layer = len(self.enc.transformer.encoder.layer)
@@ -217,14 +224,30 @@ class ViT(nn.Module):
                 transfer_type))
 
     def forward(self, x, return_feature=False):
+        # print("input 1 size : {}".format(x.shape)) # torch.Size([128, 3, 224, 224])
+        if self.side is not None:
+            side_output = self.side(x)
+            side_output = side_output.view(side_output.size(0), -1)
+            side_output = self.side_projection(side_output)
+
         if self.froze_enc and self.enc.training:
             self.enc.eval()
 
-        x = self.enc(x)
+
+        x = self.enc(x)  # batch_size x self.feat_dim
+
+        # print(x.shape)
+
+        if self.side is not None:
+            alpha_squashed = torch.sigmoid(self.side_alpha)
+            x = alpha_squashed * x + (1 - alpha_squashed) * side_output
 
         if return_feature:
             return x, x
+
         x = self.head(x)
+        # print("input 3 size : {}".format(x.shape))
+        # print("-" * 30 + "4" + "-" * 30)
 
         return x
 
@@ -248,3 +271,20 @@ class PromptedVisionTransformer(VisionTransformer):
         vit_cfg = CONFIGS[self.args.model]
         self.transformer = PromptedTransformer(
             self.args, vit_cfg, vis)
+
+    def forward(self, x, vis=False):
+        # print("-" * 30 + "2" + "-" * 30)
+        # print(x.shape)  # torch.Size([128, 768])
+        x, attn_weights = self.transformer(x)
+
+        x = x[:, 0]
+
+        # print(x.shape)  # torch.Size([128, 768])
+
+        logits = self.head(x)
+
+        # print(logits.shape)  # torch.Size([128, 100])
+
+        if not vis:
+            return logits
+        return logits, attn_weights

@@ -75,6 +75,19 @@ class PromptedTransformer(Transformer):
 
         return x
 
+    def train(self, mode=True):
+        # set train status for this class: disable all but the prompt-related modules
+        if mode:
+            # training:
+            self.encoder.eval()
+            self.embeddings.eval()
+            self.prompt_proj.train()
+            self.prompt_dropout.train()
+        else:
+            # eval:
+            for module in self.children():
+                module.train(mode)
+
     def forward_deep_prompt(self, embedding_output):
         attn_weights = []
         hidden_states = None

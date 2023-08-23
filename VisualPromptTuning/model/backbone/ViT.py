@@ -315,7 +315,9 @@ class VisionTransformer(nn.Module):
         self.classifier = config.classifier
 
         self.transformer = Transformer(config, args.input_size, vis)
-        self.head = Linear(config.hidden_size, self.num_classes) if self.num_classes > 0 else nn.Identity()
+        # self.head = Linear(config.hidden_size, self.num_classes) if self.num_classes > 0 else nn.Identity()
+        self.head = Linear(config.hidden_size, 768) if self.num_classes > 0 else nn.Identity()
+
 
     def forward(self, x, vis=False):
         x, attn_weights = self.transformer(x)

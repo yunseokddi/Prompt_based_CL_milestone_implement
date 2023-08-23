@@ -11,14 +11,14 @@ from typing import List, Type
 
 class MLP(nn.Module):
     def __init__(
-        self,
-        input_dim: int,
-        mlp_dims: List[int],
-        dropout: float = 0.1,
-        nonlinearity: Type[nn.Module] = nn.ReLU,
-        normalization: Type[nn.Module] = nn.BatchNorm1d,  # nn.LayerNorm,
-        special_bias: bool = False,
-        add_bn_first: bool = False,
+            self,
+            input_dim: int,
+            mlp_dims: List[int],
+            dropout: float = 0.1,
+            nonlinearity: Type[nn.Module] = nn.ReLU,
+            normalization: Type[nn.Module] = nn.BatchNorm1d,  # nn.LayerNorm,
+            special_bias: bool = False,
+            add_bn_first: bool = False,
     ):
         super(MLP, self).__init__()
         projection_prev_dim = input_dim
@@ -46,6 +46,8 @@ class MLP(nn.Module):
             projection_prev_dim = mlp_dim
 
         self.projection = nn.Sequential(*projection_modulelist)
+
+        # print(projection_prev_dim)  768
         self.last_layer = nn.Linear(projection_prev_dim, last_dim)
         nn.init.kaiming_normal_(self.last_layer.weight, a=0, mode='fan_out')
         if special_bias:
@@ -58,6 +60,9 @@ class MLP(nn.Module):
         input_arguments:
             @x: torch.FloatTensor
         """
+        # print("x 1 : {}".format(x.shape)) # [128, 100]
         x = self.projection(x)
+
+        # print("x 2 : {}".format(x.shape))  # [128, 100]
         x = self.last_layer(x)
         return x

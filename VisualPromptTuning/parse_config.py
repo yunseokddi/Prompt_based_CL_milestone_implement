@@ -1,6 +1,6 @@
 def get_args_parser(subparsers):
     # subparsers.add_argument('--', default=, type=, help='')
-    subparsers.add_argument('--batch-size', default=128, type=int, help='Batch size per device')
+    subparsers.add_argument('--batch-size', default=32, type=int, help='Batch size per device')
     subparsers.add_argument('--epochs', default=50, type=int)
     subparsers.add_argument('--load_pretrain', default=True, type=bool, help='Load pretrained model')
     subparsers.add_argument('--vis', default=False, type=bool, help='Visualization')

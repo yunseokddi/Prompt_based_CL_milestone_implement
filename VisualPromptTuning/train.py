@@ -29,6 +29,7 @@ def main(args):
 
     device = torch.device(args.device)
 
+
     seed = args.seed
 
     torch.manual_seed(seed)
@@ -40,8 +41,9 @@ def main(args):
     train_loader, val_loader = data_loader.get_dataloader()
 
     model = build_model(args)
+    # print(model)
 
-    criterion =create_loss(args)
+    criterion = create_loss(args)
 
     optimizer = create_optimizer(model, args)
     lr_scheduler = create_scheduler(optimizer, args)
@@ -59,7 +61,6 @@ if __name__ == "__main__":
 
     subparser = parser.add_subparsers(dest='VPT parser')
 
-
     if config == "CIFAR_VPT":
         config_parser = subparser.add_parser('CIFAR_VPT', help='CUB2000 Visual Prompt Tuning')
         get_args_parser(config_parser)
@@ -76,9 +77,9 @@ if __name__ == "__main__":
 
 '''
 CUDA_VISIBLE_DEVICES=2,3 torchrun \
-        --nproc_per_node=1 \
+        --nproc_per_node=2 \
         train.py \
         CIFAR_VPT \
-        --batch-size 128 \
+        --batch-size 64 \
         --tensorboard True
 '''

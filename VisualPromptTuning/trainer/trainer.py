@@ -58,8 +58,6 @@ class Trainer(object):
             input = input.to(self.device, non_blocking=True)
             target = target.to(self.device, non_blocking=True)
 
-            print(input.shape)
-
             with torch.set_grad_enabled(True):
                 outputs = self.model(input)
 
