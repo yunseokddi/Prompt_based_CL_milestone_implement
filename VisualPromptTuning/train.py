@@ -82,4 +82,13 @@ CUDA_VISIBLE_DEVICES=2,3 torchrun \
         CIFAR_VPT \
         --batch-size 64 \
         --tensorboard True
+        
+CUDA_VISIBLE_DEVICES=2,3 nohup torchrun \
+        --nproc_per_node=2 \
+        train.py \
+        CIFAR_VPT \
+        --batch-size 64 \
+        --tensorboard True \
+        > experiment_1.out \
+        &
 '''

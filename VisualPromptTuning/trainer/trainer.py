@@ -4,6 +4,9 @@ import os
 from fvcore.common.checkpoint import Checkpointer
 from utils.utils import AverageMeter, get_world_size
 from tqdm import tqdm
+from timm.utils import accuracy
+from tensorboard_logger import log_value
+
 
 class Trainer(object):
     def __init__(self, model, criterion, data_loader, optimizer, lr_scheduler, device, args):
@@ -42,7 +45,6 @@ class Trainer(object):
         for epoch in range(self.args.TOTAL_EPOCH):
             self._train_epoch(self.train_loader, epoch)
 
-
     def _train_epoch(self, train_loder, epoch):
         avg_loss = AverageMeter()
         avg_acc1 = AverageMeter()
@@ -61,8 +63,52 @@ class Trainer(object):
             with torch.set_grad_enabled(True):
                 outputs = self.model(input)
 
+                if self.criterion.is_local():
+                    self.model.eval()
+                    loss = self.criterion(outputs, target, self.cls_weights, self.model, input)
 
+                else:
+                    loss = self.criterion(outputs, target, self.cls_weights)
 
+                if loss == float('inf'):
+                    return -1, -1
+
+                elif torch.isnan(loss).any():
+                    return -1, -1
+
+            avg_loss.update(loss.data, input.size(0))
+
+            acc1, acc5 = accuracy(outputs, target, topk=(1, 5))
+
+            avg_acc1.update(acc1, input.size(0))
+            avg_acc5.update(acc5, input.size(0))
+
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
+
+            torch.cuda.synchronize()
+
+            errors = {
+                'Epoch': epoch,
+                'Train loss': avg_loss.avg.item(),
+                'ACC@1': avg_acc1.avg.item(),
+                'ACC@5': avg_acc5.avg.item()
+            }
+
+            tq_train.set_postfix(errors)
+
+        if self.args.tensorboard:
+            log_value('Train_loss', avg_loss.avg, epoch)
+            log_value('Train_acc1', avg_acc1.avg, epoch)
+            log_value('Train_acc5', avg_acc5.avg, epoch)
+
+        print("Epoch : {}, Train loss : {:.3f}, ACC@1 : {:.3f}, ACC@5 : {:.3f}".format(epoch,
+                                                                                       avg_loss.avg.item(),
+                                                                                       avg_acc1.avg.item(),
+                                                                                       avg_acc5.avg.item()))
+
+        return loss, outputs
 
     @torch.no_grad()
     def save_prompt(self, epoch):
