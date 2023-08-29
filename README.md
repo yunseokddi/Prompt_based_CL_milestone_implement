@@ -44,17 +44,22 @@ CL_milestone_implement/
 
 (1) If you want to full-train
 ```train
-CUDA_VISIBLE_DEVICES=[GPU idx] python -m torch.distributed.launch \
+CUDA_VISIBLE_DEVICES=[GPU idx] torchrun \
         --nproc_per_node=[Node num] \
-        --use_env train.py \
-        cifar100_l2p \
+        train.py \
+        [cifar100/imr]_l2p \
         --model vit_base_patch16_224 \
         --batch-size [Batch size] \
-        --tensorboard True \
+        --tensorboard True
 ```
 (2) If you want to evaluate
 ```eval
-CUDA_VISIBLE_DEVICES=[GPU idx] python -m torch.distributed.launch --nproc_per_node=[Node num] --use_env train.py cifar100_l2p --checkpoint_dir checkpoint --eval
+CUDA_VISIBLE_DEVICES=[GPU idx] torchrun \
+        --nproc_per_node=[Node num] \
+        train.py \
+        [cifar100/imr]_l2p \
+        --checkpoint_dir checkpoint_[cifar100/imr] \
+        --eval
 ```
 
 ### 2. DualPrompt
@@ -62,17 +67,22 @@ CUDA_VISIBLE_DEVICES=[GPU idx] python -m torch.distributed.launch --nproc_per_no
 
 (1) If you want to full-train
 ```train
-CUDA_VISIBLE_DEVICES=[GPU idx] python -m torch.distributed.launch \
+CUDA_VISIBLE_DEVICES=[GPU idx] torchrun \
         --nproc_per_node=[Node num] \
-        --use_env train.py \
-        cifar100_dualprompt \
+        train.py \
+        [cifar100/imr]_dualprompt \
         --model vit_base_patch16_224 \
         --batch-size [Batch size] \
-        --tensorboard True \
+        --tensorboard True
 ```
 (2) If you want to evaluate
 ```eval
-CUDA_VISIBLE_DEVICES=[GPU idx] python -m torch.distributed.launch --nproc_per_node=[Node num] --use_env train.py cifar100_dualprompt --checkpoint_dir checkpoint --eval
+CUDA_VISIBLE_DEVICES=[GPU idx] torchrun \
+        --nproc_per_node=[Node num] \
+        train.py \
+        [cifar100/imr]_dualprompt \
+        --checkpoint_dir checkpoint_[cifar100/imr] \
+        --eval
 ```
 
 **Result**
