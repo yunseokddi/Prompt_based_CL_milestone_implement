@@ -216,46 +216,58 @@ if __name__ == "__main__":
 '''
 
 ---------------------- Split-CIFAR100 train ----------------------
-CUDA_VISIBLE_DEVICES=2,3 nohup python -m torch.distributed.launch \
+CUDA_VISIBLE_DEVICES=2,3 nohup torchrun \
         --nproc_per_node=2 \
-        --use_env train.py \
+        train.py \
         cifar100_l2p \
         --model vit_base_patch16_224 \
         --batch-size 128 \
         --tensorboard True \
-        > experiment_2.out \
+        > cifar100_experiment_1.out \
         &
-        
-CUDA_VISIBLE_DEVICES=2,3 python -m torch.distributed.launch \
+
+CUDA_VISIBLE_DEVICES=2,3 torchrun \
         --nproc_per_node=2 \
-        --use_env train.py \
+        train.py \
         cifar100_l2p \
         --model vit_base_patch16_224 \
         --batch-size 128 \
-        --tensorboard True
+        --tensorboard True 
         
-CUDA_VISIBLE_DEVICES=2,3 nohup python -m torch.distributed.launch \
+---------------------- Split-ImageNet-R train ----------------------
+CUDA_VISIBLE_DEVICES=2,3 nohup torchrun \
         --nproc_per_node=2 \
-        --use_env train.py \
+        train.py \
         imr_l2p \
         --model vit_base_patch16_224 \
         --batch-size 128 \
         --tensorboard True \
-        > imr_experiment_1.out \
+        imr_experiment_1.out \
         &
         
-CUDA_VISIBLE_DEVICES=2,3 python -m torch.distributed.launch \
+CUDA_VISIBLE_DEVICES=2,3 torchrun \
         --nproc_per_node=2 \
-        --use_env train.py \
+        train.py \
         imr_l2p \
         --model vit_base_patch16_224 \
         --batch-size 128 \
         --tensorboard True
         
 ---------------------- Split-CIFAR100 test ----------------------
-CUDA_VISIBLE_DEVICES=2 python -m torch.distributed.launch --nproc_per_node=1 --use_env train.py cifar100_l2p --checkpoint_dir checkpoint_cifar100 --eval
+CUDA_VISIBLE_DEVICES=2 torchrun \
+        --nproc_per_node=1 \
+        train.py \
+        cifar100_l2p \
+        --checkpoint_dir \
+        checkpoint_cifar100 \
+        --eval
 
 ---------------------- Split-ImageNet-R test ----------------------
-CUDA_VISIBLE_DEVICES=2 python -m torch.distributed.launch --nproc_per_node=1 --use_env train.py imr_l2p --checkpoint_dir checkpoint_imr --eval
-
+CUDA_VISIBLE_DEVICES=2 torchrun \
+        --nproc_per_node=1 \
+        train.py \
+        imr_l2p \
+        --checkpoint_dir \
+        checkpoint_imr \
+        --eval
 '''
