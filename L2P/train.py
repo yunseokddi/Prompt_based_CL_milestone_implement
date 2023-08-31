@@ -42,6 +42,7 @@ def main(args):
 
     data_loader, class_mask = CL_dataloader.get_dataloader()
 
+
     print("Creating original model: {}".format(args.model))
 
     original_model = create_model(
