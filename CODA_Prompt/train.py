@@ -27,7 +27,10 @@ def main(args):
 
     CL_dataloader = ContinualDataLoader(args)
 
-    print("Finish")
+    data_loader, class_mask = CL_dataloader.get_dataloader()
+
+
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser('CODA-Prompt training and evaluation configs')
@@ -51,10 +54,26 @@ if __name__ == "__main__":
 
     sys.exit(0)
 
+
+
 '''
-CUDA_VISIBLE_DEVICES=2,3 python -m torch.distributed.launch \
+CUDA_VISIBLE_DEVICES=2,3 torchrun \
         --nproc_per_node=2 \
-        --use_env train.py \
+        train.py \
+        cifar100_coda_prompt \
+        --model vit_base_patch16_224 \
+        --batch-size 128 \
+        --tensorboard True
+        
+CUDA_VISIBLE_DEVICES=0 torchrun \
+        --nproc_per_node=1 \
+        train.py \
+        cifar100_coda_prompt \
+        --model vit_base_patch16_224 \
+        --batch-size 128 \
+        --tensorboard True
+        
+python3 train.py \
         cifar100_coda_prompt \
         --model vit_base_patch16_224 \
         --batch-size 128 \
